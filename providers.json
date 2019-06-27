@@ -1,0 +1,34 @@
+[
+    {
+        "name": "instagram.com",
+        "download_request": "https://www.instagram.com/download/request/"
+    },
+    {
+        "name": "facebook.com",
+        "download_request": "https://www.facebook.com/settings?tab=your_facebook_information"
+    },
+    {
+        "name": "strava.com",
+        "download_request": "https://www.strava.com/athlete/delete_your_account"
+    },
+    {
+        "name": "xing.com",
+        "download_request": "https://www.xing.com/settings/privacy/data/disclosure"
+    },
+    {
+        "name": "google+",
+        "download_request": "https://takeout.google.com/settings/takeout/custom/circles,plus_one,plus_communities,stream"
+    },
+    {
+        "name": "twitter.com",
+        "download_request": "https://twitter.com/settings/your_twitter_data"
+    },
+    {
+        "name": "linkedin.com",
+        "download_request": "https://www.linkedin.com/psettings/member-data"
+    },
+    {
+        "name": "amazon.de",
+        "download_request": "https://www.amazon.de/gp/help/customer/display.html/ref=hp_left_v4_sib?ie=UTF8&nodeId=G5NBVNN2RHXD5BUW"
+    }
+]
