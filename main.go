@@ -24,5 +24,4 @@ func main() {
 	log.Printf("Serving Application on port %d", port)
 
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), router))
-
 }

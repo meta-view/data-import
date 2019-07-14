@@ -11,10 +11,19 @@ type Plugin struct {
 	Version  *semver.Version
 }
 
-func (plugin *Plugin) getAccountName() (string, error) {
+func LoadPlugin(path string) (*Plugin, error) {
+	return &Plugin{
+		Provider: &Provider{Name: "Test", DownloadRequest: "/provider/test"},
+		Path:     path,
+		Version:  semver.New("0.0.1"),
+	}, nil
+}
+
+func (plugin *Plugin) GetAccountName() (string, error) {
 	script := `
 		// Sample xyzzy example
 		(function(){
+			var length = 12;
 			var result           = '';
 			var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 			var charactersLength = characters.length;
