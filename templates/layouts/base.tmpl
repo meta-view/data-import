@@ -22,14 +22,14 @@
   </head>
   <body class="">
     <div class="page">
-      <div class="page-main">
+      <div class="flex-fill">
         {{block "nav" .}} {{end}}
         <div class="my-3 my-md-5">
           {{template "content" .}}
         </div>
       </div>
-      <footer>{{block "footer" .}} {{end}}</footer>
     </div>
+    <footer>{{block "footer" .}} {{end}}</footer>
   </body>
   {{block "js" .}} {{end}}
 </html>
