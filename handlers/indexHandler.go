@@ -8,6 +8,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
+// IndexHandler - handler for the basic index file
 func IndexHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	testPlugin()
 	renderTemplate(w, "index.tmpl", nil)
