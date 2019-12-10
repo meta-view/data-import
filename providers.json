@@ -34,5 +34,9 @@
     {
         "name":"parship.de",
         "download_request":"https://www.parship.de/settings/personaldata/personaldatainquiry"
+    },
+    {
+        "name":"garmin.com",
+        "download_request":"https://www.garmin.com/de-DE/account/datamanagement/exportdata"
     }
 ]
