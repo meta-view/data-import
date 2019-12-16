@@ -13,6 +13,7 @@ import (
 var templates map[string]*template.Template
 var bufpool *bpool.BufferPool
 
+// TemplateConfig - the config of the template
 type TemplateConfig struct {
 	TemplateLayoutPath  string
 	TemplateIncludePath string
@@ -27,6 +28,7 @@ func loadConfiguration() {
 	templateConfig.TemplateIncludePath = "templates/"
 }
 
+// LoadTemplates - initially loads all templates.
 func LoadTemplates() {
 	loadConfiguration()
 	if templates == nil {
