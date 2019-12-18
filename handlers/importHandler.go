@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"meta-view-service/tools"
 	"net/http"
 	"os"
 	"path"
@@ -28,11 +29,13 @@ func init() {
 }
 
 // ImportHandler - deals with the import of dumps
-func ImportHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	handleUpload(w, r)
+func ImportHandler(plugins map[string]*tools.Plugin) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		handleUpload(w, r, plugins)
+	}
 }
 
-func handleUpload(w http.ResponseWriter, r *http.Request) {
+func handleUpload(w http.ResponseWriter, r *http.Request, plugins map[string]*tools.Plugin) {
 
 	r.ParseMultipartForm(512 << 20)
 
@@ -44,7 +47,7 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		defer file.Close()
-		log.Printf("uploaded: %v", fh.Header)
+		log.Printf("uploaded: %v\n", fh.Header)
 		filename := path.Join(zipDataDirectory, fh.Filename)
 		f, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE, 0666)
 		if err != nil {
@@ -53,22 +56,25 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 		}
 		defer f.Close()
 		io.Copy(f, file)
-		files, err := importData(filename)
+		dest := strings.Replace(strings.Replace(filename, zipDataDirectory, rawDataDirectory, 1), ".zip", "", 1)
+		files, err := importData(filename, dest)
 
 		for _, file := range files {
-			fmt.Printf("extracting file %s\n", file)
+			fmt.Printf("\textracting file %s\n", file)
+		}
+
+		for _, plugin := range plugins {
+			plugin.Detect(dest)
 		}
 	}
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
-func importData(src string) ([]string, error) {
-	fmt.Printf("importing %s\n", src)
+func importData(src string, dest string) ([]string, error) {
+	log.Printf("importing %s to %s\n", src, dest)
 	var filenames []string
 
 	if strings.HasSuffix(src, ".zip") {
-
-		dest := strings.Replace(strings.Replace(src, zipDataDirectory, rawDataDirectory, 1), ".zip", "", 1)
 
 		r, err := zip.OpenReader(src)
 		if err != nil {

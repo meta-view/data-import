@@ -1,46 +1,61 @@
 package tools
 
 import (
+	"encoding/json"
+	"io/ioutil"
+	"log"
+	"path"
+	"strconv"
+
 	"github.com/coreos/go-semver/semver"
 	"github.com/robertkrimen/otto"
 )
 
+// Plugin - a basic plugin structur
 type Plugin struct {
 	Provider *Provider
 	Path     string
 	Version  *semver.Version
+	VM       *otto.Otto
 }
 
-func LoadPlugin(path string) (*Plugin, error) {
+// LoadPlugin - loads one plugin
+func LoadPlugin(pluginPath string) (*Plugin, error) {
+	data, err := ioutil.ReadFile(path.Join(pluginPath, "package.json"))
+	if err != nil {
+		return nil, err
+	}
+	var packageInfo map[string]string
+	err = json.Unmarshal(data, &packageInfo)
+	log.Printf("loading %s from %s\n", packageInfo, pluginPath)
 	return &Plugin{
-		Provider: &Provider{Name: "Test", DownloadRequest: "/provider/test"},
-		Path:     path,
-		Version:  semver.New("0.0.1"),
+		Provider: &Provider{Name: packageInfo["name"], DownloadRequest: packageInfo["download_request"]},
+		Path:     pluginPath,
+		Version:  semver.New(packageInfo["version"]),
+		VM:       otto.New(),
 	}, nil
 }
 
-func (plugin *Plugin) GetAccountName() (string, error) {
-	script := `
-		// Sample xyzzy example
-		(function(){
-			var length = 12;
-			var result           = '';
-			var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-			var charactersLength = characters.length;
-			for ( var i = 0; i < length; i++ ) {
-			   result += characters.charAt(Math.floor(Math.random() * charactersLength));
-			}
-			return result;
-		})();
-	`
-	vm := otto.New()
-	result, err := vm.Run(script)
+// Detect - returns the percentage if a given payload is of the type of the plugin
+func (plugin *Plugin) Detect(payloadPath string) (float64, error) {
+	log.Printf("Detect if %s is for [%s]", payloadPath, plugin.Provider.Name)
+	output := 0.0
+	plugin.VM.Set("payloadPath", payloadPath)
+	script, err := ioutil.ReadFile(path.Join(plugin.Path, "detector.js"))
 	if err != nil {
-		return "", err
+		return output, err
 	}
+
+	result, err := plugin.VM.Run(script)
 	value, err := result.ToString()
 	if err != nil {
-		return "", err
+		return output, err
 	}
-	return value, nil
+
+	output, err = strconv.ParseFloat(value, 64)
+	if err != nil {
+		return output, err
+	}
+
+	return output, nil
 }
