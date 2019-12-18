@@ -14,13 +14,16 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
+var zipDataDirectory = path.Join("data", "zip")
 var rawDataDirectory = path.Join("data", "raw")
 
 func init() {
-
-	if _, err := os.Stat(rawDataDirectory); os.IsNotExist(err) {
-		os.MkdirAll(rawDataDirectory, 0700)
-		log.Printf("created directory %s", rawDataDirectory)
+	folders := []string{zipDataDirectory, rawDataDirectory}
+	for _, folder := range folders {
+		if _, err := os.Stat(folder); os.IsNotExist(err) {
+			os.MkdirAll(folder, 0700)
+			log.Printf("created directory %s", folder)
+		}
 	}
 }
 
@@ -42,7 +45,7 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 		}
 		defer file.Close()
 		log.Printf("uploaded: %v", fh.Header)
-		filename := path.Join(rawDataDirectory, fh.Filename)
+		filename := path.Join(zipDataDirectory, fh.Filename)
 		f, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE, 0666)
 		if err != nil {
 			log.Println(err)
@@ -65,7 +68,7 @@ func importData(src string) ([]string, error) {
 
 	if strings.HasSuffix(src, ".zip") {
 
-		dest := strings.Replace(src, ".zip", "", 1)
+		dest := strings.Replace(strings.Replace(src, zipDataDirectory, rawDataDirectory, 1), ".zip", "", 1)
 
 		r, err := zip.OpenReader(src)
 		if err != nil {
