@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"time"
 
-	// required for sqlite
 	"log"
 	"os"
 	"path"
 
 	"github.com/google/uuid"
+	// required for sqlite
 	_ "github.com/mattn/go-sqlite3"
 	"gopkg.in/square/go-jose.v2/json"
 )
