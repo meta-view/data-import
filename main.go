@@ -31,7 +31,8 @@ func main() {
 		log.Fatal(err)
 	}
 	router := httprouter.New()
-	router.ServeFiles("/assets/*filepath", http.Dir("assets"))
+	//router.ServeFiles("/assets/*filepath", http.Dir("assets"))
+	router.GET("/assets/*filepath", handlers.AssetsHandler())
 	router.GET("/", handlers.IndexHandler())
 	router.POST("/import", handlers.ImportHandler(plugins))
 	log.Printf("Serving Application on port %d", port)
