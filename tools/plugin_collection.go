@@ -2,6 +2,7 @@ package tools
 
 import (
 	"io/ioutil"
+	"meta-view-service/services"
 	"path"
 )
 
@@ -11,7 +12,7 @@ type PluginCollection struct {
 }
 
 // LoadPlugins - load all plugins of the current system
-func LoadPlugins(pluginFolder string) (map[string]*Plugin, error) {
+func LoadPlugins(pluginFolder string, db *services.Database) (map[string]*Plugin, error) {
 	folders, err := ioutil.ReadDir(pluginFolder)
 	if err != nil {
 		return nil, err
@@ -19,7 +20,7 @@ func LoadPlugins(pluginFolder string) (map[string]*Plugin, error) {
 	plugins := make(map[string]*Plugin)
 	for _, folder := range folders {
 		if folder.IsDir() {
-			plugin, err := LoadPlugin(path.Join(pluginFolder, folder.Name()))
+			plugin, err := LoadPlugin(path.Join(pluginFolder, folder.Name()), db)
 			if err == nil {
 				plugins[folder.Name()] = plugin
 			}

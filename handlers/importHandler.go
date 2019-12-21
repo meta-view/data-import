@@ -60,11 +60,14 @@ func handleUpload(w http.ResponseWriter, r *http.Request, plugins map[string]*to
 		files, err := importData(filename, dest)
 
 		for _, file := range files {
-			fmt.Printf("\textracting file %s\n", file)
+			log.Printf("extracting file %s\n", file)
 		}
 
 		for _, plugin := range plugins {
-			plugin.Detect(dest)
+			err := plugin.Import(dest)
+			if err != nil {
+				log.Println(err)
+			}
 		}
 	}
 	http.Redirect(w, r, "/", http.StatusSeeOther)

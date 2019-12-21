@@ -48,44 +48,50 @@ func CreateDatabase() (*Database, error) {
 }
 
 // InsertEntry insert an entry into the database
-func (db *Database) InsertEntry(data map[string]interface{}) error {
+func (db *Database) InsertEntry(data map[string]interface{}) (string, error) {
 	var id string
 	table := fmt.Sprintf("%v", data["table"])
 	if table == "" {
-		return errors.New("table to set")
+		return "", errors.New("table to set")
 	}
 	db.checkTable(table)
 	if data["id"] == nil {
 		ID := uuid.New()
 		id = ID.String()
-		data["id"] = id
+		data["id"] = ID.String()
 	} else {
 		id = fmt.Sprintf("%v", data["id"])
 	}
 
 	log.Printf("saving id %s in table %s\n", id, table)
 
+	date := time.Now().Format(time.RFC3339)
+	if data["created"] == nil {
+		data["created"] = date
+	}
+	if data["updated"] == nil {
+		data["updated"] = date
+	}
 	tx, err := db.DB.Begin()
 	if err != nil {
-		return err
+		return "", err
 	}
 	stmt, err := tx.Prepare(fmt.Sprintf("insert into %s(id, created, updated, content) values(?, ?, ?, ?)", table))
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer stmt.Close()
 	content, err := json.Marshal(data)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	date := time.Now().Format(time.RFC3339)
-	_, err = stmt.Exec(id, date, date, content)
+	_, err = stmt.Exec(id, data["created"], data["updated"], content)
 	if err != nil {
-		return err
+		return "", err
 	}
 	tx.Commit()
-	return nil
+	return id, nil
 }
 
 func (db *Database) checkTable(table string) error {

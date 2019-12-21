@@ -26,7 +26,7 @@ func main() {
 	defer db.Close()
 	testDB(db)
 
-	plugins, err := tools.LoadPlugins("plugins")
+	plugins, err := tools.LoadPlugins("plugins", db)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -43,8 +43,9 @@ func testDB(db *services.Database) {
 	data := make(map[string]interface{})
 	data["table"] = "testDB"
 	data["date"] = time.Now()
-	err := db.InsertEntry(data)
+	id, err := db.InsertEntry(data)
 	if err != nil {
 		log.Printf("error %v", err)
 	}
+	log.Printf("inserting %s as id %s\n", data, id)
 }

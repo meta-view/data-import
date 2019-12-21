@@ -1,9 +1,11 @@
 package tools
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"io/ioutil"
 	"log"
+	"meta-view-service/services"
 	"net/http"
 	"os"
 	"path"
@@ -19,10 +21,15 @@ type Plugin struct {
 	Path     string
 	Version  *semver.Version
 	VM       *otto.Otto
+	DB       *services.Database
+}
+
+// Object - a Javascript Object
+type Object struct {
 }
 
 // LoadPlugin - loads one plugin
-func LoadPlugin(pluginPath string) (*Plugin, error) {
+func LoadPlugin(pluginPath string, db *services.Database) (*Plugin, error) {
 	data, err := ioutil.ReadFile(path.Join(pluginPath, "package.json"))
 	if err != nil {
 		return nil, err
@@ -35,6 +42,7 @@ func LoadPlugin(pluginPath string) (*Plugin, error) {
 		Path:     pluginPath,
 		Version:  semver.New(packageInfo["version"]),
 		VM:       otto.New(),
+		DB:       db,
 	}, nil
 }
 
@@ -72,6 +80,34 @@ func (plugin *Plugin) Detect(payloadPath string) (float64, error) {
 	return output, nil
 }
 
+// Import - imports the payload into a specific data structure
+func (plugin *Plugin) Import(payloadPath string) error {
+	log.Printf("Import data of %s for [%s]", payloadPath, plugin.Provider.Name)
+
+	err := plugin.loadTools(payloadPath)
+	if err != nil {
+		return err
+	}
+
+	err = plugin.VM.Set("payloadPath", payloadPath)
+	if err != nil {
+		return err
+	}
+
+	script, err := ioutil.ReadFile(path.Join(plugin.Path, "importer.js"))
+	if err != nil {
+		return err
+	}
+
+	result, err := plugin.VM.Run(script)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("Import Result: %s\n", result)
+	return nil
+}
+
 func (plugin *Plugin) loadTools(payloadPath string) error {
 	log.Printf("installing tools for path %s", payloadPath)
 	err := plugin.VM.Set("getFiles", func() []string {
@@ -81,23 +117,39 @@ func (plugin *Plugin) loadTools(payloadPath string) error {
 		return err
 	}
 
-	err = plugin.VM.Set("getContentType", func(file string) string {
+	err = plugin.VM.Set("getContent", func(file string) string {
 		path := path.Join(payloadPath, file)
-		// Open File
-		f, err := os.Open(path)
+		content, err := getFileContent(path)
 		if err != nil {
-			log.Printf("error opening %s\n", path)
+			log.Printf("error %s reading content of %s\n", err, path)
 			return ""
 		}
-		defer f.Close()
+		return content
+	})
+	if err != nil {
+		return err
+	}
 
-		// Get the content
-		contentType, err := getFileContentType(f)
+	err = plugin.VM.Set("getContentType", func(file string) string {
+		path := path.Join(payloadPath, file)
+		contentType, err := getFileContentType(path)
 		if err != nil {
-			log.Printf("error reading contentType from %s\n", path)
+			log.Printf("error %s reading contentType of %s\n", err, path)
 			return ""
 		}
 		return contentType
+	})
+	if err != nil {
+		return err
+	}
+
+	err = plugin.VM.Set("saveEntry", func(data map[string]interface{}) string {
+		id, err := plugin.DB.InsertEntry(data)
+		if err != nil {
+			log.Printf("error %s saving data\n", err)
+			return ""
+		}
+		return id
 	})
 	if err != nil {
 		return err
@@ -126,12 +178,29 @@ func readFiles(parent string, child string) []string {
 	return files
 }
 
-func getFileContentType(out *os.File) (string, error) {
+func getFileContent(file string) (string, error) {
+	content, err := ioutil.ReadFile(file)
+	if err != nil {
+		return "", err
+	}
+	encoded := base64.StdEncoding.EncodeToString([]byte(content))
+	return encoded, nil
+}
+
+func getFileContentType(file string) (string, error) {
+
+	// Open File
+	f, err := os.Open(file)
+	if err != nil {
+		log.Printf("error opening %s\n", file)
+		return "", err
+	}
+	defer f.Close()
 
 	// Only the first 512 bytes are used to sniff the content type.
 	buffer := make([]byte, 512)
 
-	_, err := out.Read(buffer)
+	_, err = f.Read(buffer)
 	if err != nil {
 		return "", err
 	}
