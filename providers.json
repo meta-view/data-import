@@ -32,8 +32,8 @@
         "download_request": "https://www.amazon.de/gp/help/customer/display.html/?nodeId=G5NBVNN2RHXD5BUW"
     },
     {
-        "name":"parship.de",
-        "download_request":"https://www.parship.de/settings/personaldata/personaldatainquiry"
+        "name": "flickr.com",
+        "download_request": "https://www.flickr.com/account"
     },
     {
         "name":"garmin.com",
