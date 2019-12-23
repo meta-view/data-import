@@ -5,7 +5,7 @@
     for (i in files) {
         data = {
             "table": "files",
-            "provider":"[twitter.com]",
+            "provider":"twitter.com",
             "name": files[i],
             "content-type": getContentType(files[i]), 
             "content": getContent(files[i])

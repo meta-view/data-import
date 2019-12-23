@@ -65,6 +65,10 @@ func (db *Database) InsertEntry(data map[string]interface{}) (string, error) {
 
 	log.Printf("saving id %s in table %s\n", id, table)
 
+	if data["provider"] == nil {
+		data["provider"] = "N/A"
+	}
+
 	date := time.Now().Format(time.RFC3339)
 	if data["created"] == nil {
 		data["created"] = date
@@ -76,7 +80,7 @@ func (db *Database) InsertEntry(data map[string]interface{}) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	stmt, err := tx.Prepare(fmt.Sprintf("insert into %s(id, created, updated, content) values(?, ?, ?, ?)", table))
+	stmt, err := tx.Prepare(fmt.Sprintf("insert into %s(id, provider, created, updated, content) values(?, ?, ?, ?, ?)", table))
 	if err != nil {
 		return "", err
 	}
@@ -86,7 +90,7 @@ func (db *Database) InsertEntry(data map[string]interface{}) (string, error) {
 		return "", err
 	}
 
-	_, err = stmt.Exec(id, data["created"], data["updated"], content)
+	_, err = stmt.Exec(id, data["provider"], data["created"], data["updated"], content)
 	if err != nil {
 		return "", err
 	}
@@ -103,7 +107,7 @@ func (db *Database) checkTable(table string) error {
 	var name string
 	err = stmt.QueryRow(table).Scan(&name)
 	if err != nil && err == sql.ErrNoRows {
-		sqlStmt := fmt.Sprintf("CREATE TABLE %s (id TEXT not null primary key, created TEXT, updated TEXT, content TEXT);", table)
+		sqlStmt := fmt.Sprintf("CREATE TABLE %s (id TEXT not null primary key, provider TEXT, created TEXT, updated TEXT, content TEXT);", table)
 		log.Printf("created table %s\n", table)
 		_, err = db.DB.Exec(sqlStmt)
 		if err != nil {
