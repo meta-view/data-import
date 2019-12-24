@@ -1,8 +1,11 @@
 package tools
 
 import (
+	"crypto/sha1"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
+	"io"
 	"io/ioutil"
 	"log"
 	"meta-view-service/services"
@@ -144,6 +147,19 @@ func (plugin *Plugin) loadTools(payloadPath string) error {
 		return err
 	}
 
+	err = plugin.VM.Set("getSha1Checksum", func(file string) string {
+		path := path.Join(payloadPath, file)
+		checksum, err := getSha1Checksum(path)
+		if err != nil {
+			log.Printf("error %s calculating sha1 checksum of %s\n", err, path)
+			return ""
+		}
+		return checksum
+	})
+	if err != nil {
+		return err
+	}
+
 	err = plugin.VM.Set("saveEntry", func(data map[string]interface{}) string {
 		id, err := plugin.DB.InsertEntry(data)
 		if err != nil {
@@ -190,7 +206,6 @@ func getFileContent(file string) (string, error) {
 
 func getFileContentType(file string) (string, error) {
 
-	// Open File
 	f, err := os.Open(file)
 	if err != nil {
 		log.Printf("error opening %s\n", file)
@@ -198,7 +213,6 @@ func getFileContentType(file string) (string, error) {
 	}
 	defer f.Close()
 
-	// Only the first 512 bytes are used to sniff the content type.
 	buffer := make([]byte, 512)
 
 	_, err = f.Read(buffer)
@@ -209,4 +223,20 @@ func getFileContentType(file string) (string, error) {
 	contentType := http.DetectContentType(buffer)
 
 	return contentType, nil
+}
+
+func getSha1Checksum(file string) (string, error) {
+
+	f, err := os.Open(file)
+	if err != nil {
+		log.Printf("error opening %s\n", file)
+		return "", err
+	}
+	defer f.Close()
+
+	h := sha1.New()
+	if _, err := io.Copy(h, f); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(h.Sum(nil)), nil
 }

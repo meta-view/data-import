@@ -3,6 +3,7 @@
     files = getFiles()
     console.log("[twitter.com] loading " + files.length + " files");
     for (i in files) {
+        console.log("checksum of " + files[i] + " is " + )
         data = {
             "table": "files",
             "provider": _provider,
