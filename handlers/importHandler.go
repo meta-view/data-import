@@ -63,10 +63,20 @@ func handleUpload(w http.ResponseWriter, r *http.Request, plugins map[string]*to
 			log.Printf("extracting file %s\n", file)
 		}
 
+		markers := make(map[string]float64)
+		for _, plugin := range plugins {
+			value, err := plugin.Detect(dest)
+			if err != nil {
+				log.Printf("Error: %s\n", err)
+			} else {
+				markers[plugin.Provider.Name] = value
+			}
+		}
+
 		for _, plugin := range plugins {
 			err := plugin.Import(dest)
 			if err != nil {
-				log.Println(err)
+				log.Printf("Error: %s\n", err)
 			}
 		}
 	}

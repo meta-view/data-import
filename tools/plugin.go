@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"os"
 	"path"
-	"strconv"
 
 	"github.com/coreos/go-semver/semver"
 	"github.com/robertkrimen/otto"
@@ -56,7 +55,7 @@ func (plugin *Plugin) Detect(payloadPath string) (float64, error) {
 		return output, err
 	}
 
-	err = plugin.VM.Set("payloadPath", payloadPath)
+	err = plugin.VM.Set("_payloadPath", payloadPath)
 	if err != nil {
 		return output, err
 	}
@@ -67,17 +66,16 @@ func (plugin *Plugin) Detect(payloadPath string) (float64, error) {
 	}
 
 	result, err := plugin.VM.Run(script)
-	value, err := result.ToString()
 	if err != nil {
 		return output, err
 	}
 
-	output, err = strconv.ParseFloat(value, 64)
+	value, err := result.ToFloat()
 	if err != nil {
 		return output, err
 	}
-
-	return output, nil
+	log.Printf("result: %f", value)
+	return value, nil
 }
 
 // Import - imports the payload into a specific data structure
@@ -89,7 +87,7 @@ func (plugin *Plugin) Import(payloadPath string) error {
 		return err
 	}
 
-	err = plugin.VM.Set("payloadPath", payloadPath)
+	err = plugin.VM.Set("_payloadPath", payloadPath)
 	if err != nil {
 		return err
 	}
@@ -109,7 +107,10 @@ func (plugin *Plugin) Import(payloadPath string) error {
 }
 
 func (plugin *Plugin) loadTools(payloadPath string) error {
+	LoadPluginExtenstions(plugin.VM)
 	log.Printf("installing tools for path %s", payloadPath)
+	plugin.VM.Set("_provider", plugin.Provider.Name)
+
 	err := plugin.VM.Set("getFiles", func() []string {
 		return readFiles(payloadPath, "")
 	})
