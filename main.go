@@ -44,7 +44,7 @@ func testDB(db *services.Database) {
 	data := make(map[string]interface{})
 	data["table"] = "testDB"
 	data["date"] = time.Now()
-	id, err := db.InsertEntry(data)
+	id, err := db.SaveEntry(data)
 	if err != nil {
 		log.Printf("error %v", err)
 	}

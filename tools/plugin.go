@@ -161,7 +161,7 @@ func (plugin *Plugin) loadTools(payloadPath string) error {
 	}
 
 	err = plugin.VM.Set("saveEntry", func(data map[string]interface{}) string {
-		id, err := plugin.DB.InsertEntry(data)
+		id, err := plugin.DB.SaveEntry(data)
 		if err != nil {
 			log.Printf("error %s saving data\n", err)
 			return ""

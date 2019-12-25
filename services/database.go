@@ -47,9 +47,8 @@ func CreateDatabase() (*Database, error) {
 	}, nil
 }
 
-// InsertEntry insert an entry into the database
-func (db *Database) InsertEntry(data map[string]interface{}) (string, error) {
-	var id string
+// SaveEntry insert an entry into the database
+func (db *Database) SaveEntry(data map[string]interface{}) (string, error) {
 	table := fmt.Sprintf("%v", data["table"])
 	if table == "" {
 		return "", errors.New("table to set")
@@ -57,13 +56,8 @@ func (db *Database) InsertEntry(data map[string]interface{}) (string, error) {
 	db.checkTable(table)
 	if data["id"] == nil {
 		ID := uuid.New()
-		id = ID.String()
 		data["id"] = ID.String()
-	} else {
-		id = fmt.Sprintf("%v", data["id"])
 	}
-
-	log.Printf("saving id %s in table %s\n", id, table)
 
 	if data["provider"] == nil {
 		data["provider"] = "N/A"
@@ -76,11 +70,21 @@ func (db *Database) InsertEntry(data map[string]interface{}) (string, error) {
 	if data["updated"] == nil {
 		data["updated"] = date
 	}
+
+	return db.insertOrUpdateEntry(data)
+}
+
+func (db *Database) insertOrUpdateEntry(data map[string]interface{}) (string, error) {
+	id := fmt.Sprintf("%v", data["id"])
+	log.Printf("inserting id %s in table %s\n", data["id"], data["table"])
 	tx, err := db.DB.Begin()
 	if err != nil {
 		return "", err
 	}
-	stmt, err := tx.Prepare(fmt.Sprintf("insert into %s(id, provider, created, updated, content) values(?, ?, ?, ?, ?)", table))
+
+	sqlStmt := fmt.Sprintf("INSERT INTO %s(id, provider, created, updated, content) VALUES(?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET provider=?, created=?, updated=?, content=? WHERE id = ?;", data["table"])
+
+	stmt, err := tx.Prepare(sqlStmt)
 	if err != nil {
 		return "", err
 	}
@@ -90,12 +94,23 @@ func (db *Database) InsertEntry(data map[string]interface{}) (string, error) {
 		return "", err
 	}
 
-	_, err = stmt.Exec(id, data["provider"], data["created"], data["updated"], content)
+	_, err = stmt.Exec(
+		id,
+		data["provider"],
+		data["created"],
+		data["updated"],
+		content,
+		data["provider"],
+		data["created"],
+		data["updated"],
+		content,
+		id)
 	if err != nil {
 		return "", err
 	}
 	tx.Commit()
 	return id, nil
+
 }
 
 func (db *Database) checkTable(table string) error {
@@ -105,10 +120,18 @@ func (db *Database) checkTable(table string) error {
 	}
 	defer stmt.Close()
 	var name string
+	var sqlStmt string
 	err = stmt.QueryRow(table).Scan(&name)
 	if err != nil && err == sql.ErrNoRows {
-		sqlStmt := fmt.Sprintf("CREATE TABLE %s (id TEXT not null primary key, provider TEXT, created TEXT, updated TEXT, content TEXT);", table)
+		sqlStmt = fmt.Sprintf("CREATE TABLE %s (id TEXT not null primary key, provider TEXT, created TEXT, updated TEXT, content TEXT);", table)
 		log.Printf("created table %s\n", table)
+		_, err = db.DB.Exec(sqlStmt)
+		if err != nil {
+			return err
+		}
+
+		sqlStmt = fmt.Sprintf("CREATE UNIQUE INDEX idx_%s_id ON %s(id);", table, table)
+		log.Printf("created index for table %s\n", table)
 		_, err = db.DB.Exec(sqlStmt)
 		if err != nil {
 			return err
