@@ -114,8 +114,15 @@ func (plugin *Plugin) loadTools(payloadPath string) error {
 	log.Printf("installing tools for path %s", payloadPath)
 	plugin.VM.Set("_provider", plugin.Provider.Name)
 
-	err := plugin.VM.Set("getFiles", func() []string {
-		return readFiles(payloadPath, "")
+	err := plugin.VM.Set("readDir", func() []string {
+		return readFiles(payloadPath, "", false)
+	})
+	if err != nil {
+		return err
+	}
+
+	err = plugin.VM.Set("listFiles", func() []string {
+		return readFiles(payloadPath, "", true)
 	})
 	if err != nil {
 		return err
@@ -175,7 +182,7 @@ func (plugin *Plugin) loadTools(payloadPath string) error {
 	return nil
 }
 
-func readFiles(parent string, child string) []string {
+func readFiles(parent string, child string, filesOnly bool) []string {
 	folder := path.Join(parent, child)
 	files := make([]string, 0)
 	log.Printf("reading folder %s\n", folder)
@@ -186,7 +193,10 @@ func readFiles(parent string, child string) []string {
 	}
 	for _, file := range folders {
 		if file.IsDir() {
-			subFolderFiles := readFiles(parent, path.Join(child, file.Name()))
+			if !filesOnly {
+				files = append(files, path.Join(child, file.Name()))
+			}
+			subFolderFiles := readFiles(parent, path.Join(child, file.Name()), filesOnly)
 			files = append(files, subFolderFiles...)
 		} else {
 			files = append(files, path.Join(child, file.Name()))

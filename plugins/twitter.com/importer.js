@@ -1,6 +1,6 @@
 (function(){
     console.log("[twitter.com] Import payload " + _payloadPath);
-    files = getFiles()
+    files = listFiles()
     console.log("[twitter.com] loading " + files.length + " files");
     for (i in files) {
         checksum = getSha1Checksum(files[i]);

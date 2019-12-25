@@ -14,7 +14,7 @@
         return 0.0;
     }
 
-    files = getFiles()
+    files = readDir()
     for (i in files) {
         output += calcOutput(files[i]);
     }
