@@ -167,14 +167,21 @@ func (plugin *Plugin) loadTools(payloadPath string) error {
 		return err
 	}
 
-	err = plugin.VM.Set("getSha1Checksum", func(file string) string {
+	err = plugin.VM.Set("getFileChecksum", func(file string) string {
 		path := path.Join(payloadPath, file)
-		checksum, err := getSha1Checksum(path)
+		checksum, err := getSha1ChecksumOfFile(path)
 		if err != nil {
 			log.Printf("error %s calculating sha1 checksum of %s\n", err, path)
 			return ""
 		}
 		return checksum
+	})
+	if err != nil {
+		return err
+	}
+
+	err = plugin.VM.Set("getChecksum", func(content string) string {
+		return getSha1Checksum(content)
 	})
 	if err != nil {
 		return err
@@ -259,7 +266,7 @@ func getFileContentType(file string) (string, error) {
 	return contentType, nil
 }
 
-func getSha1Checksum(file string) (string, error) {
+func getSha1ChecksumOfFile(file string) (string, error) {
 
 	f, err := os.Open(file)
 	if err != nil {
@@ -273,4 +280,11 @@ func getSha1Checksum(file string) (string, error) {
 		return "", err
 	}
 	return hex.EncodeToString(h.Sum(nil)), nil
+}
+
+func getSha1Checksum(content string) string {
+	bv := []byte(content)
+	h := sha1.New()
+	h.Write(bv)
+	return hex.EncodeToString(h.Sum(nil))
 }

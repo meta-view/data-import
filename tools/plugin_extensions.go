@@ -10,8 +10,24 @@ import (
 // LoadPluginExtenstions - adds JS extensions to otto vm runtime
 func LoadPluginExtenstions(vm *otto.Otto) error {
 	log.Println("installing JS Extensions")
+	err := loadStringExtensions(vm)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func loadStringExtensions(vm *otto.Otto) error {
+	log.Println("installing JS String Extensions")
 	err := vm.Set("StringEndsWith", func(a string, b string) bool {
 		return strings.HasSuffix(a, b)
+	})
+	if err != nil {
+		return err
+	}
+
+	err = vm.Set("StringStartsWith", func(a string, b string) bool {
+		return strings.HasPrefix(a, b)
 	})
 	if err != nil {
 		return err
