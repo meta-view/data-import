@@ -3,15 +3,33 @@
     files = listFiles()
     console.log("[twitter.com] loading " + files.length + " files");
     for (i in files) {
-        checksum = getSha1Checksum(files[i]);
-        data = {
-            "id": checksum,
-            "table": "files",
-            "provider": _provider,
-            "name": files[i],
-            "content-type": getContentType(files[i]), 
-            "content": getContent(files[i])
+        data = getData(files[i]);
+        saveEntry(data);
+    }
+
+    function getData(file) {
+        checksum = getSha1Checksum(file);
+        contentType = getContentType(file);
+        switch (file) {
+            case "account.js":
+                content = StringReplace(getContent(file), "window.YTD.account.part0 =", "");
+                return {
+                    "id": checksum,
+                    "table": "accounts",
+                    "provider": _provider,
+                    "name": file,
+                    "content-type": contentType,
+                    "content": JSON.parse(content)
+                }
+            default:
+                return {
+                    "id": checksum,
+                    "table": "files",
+                    "provider": _provider,
+                    "name": file,
+                    "content-type": contentType,
+                    "content": getBase64(file)
+                }
         }
-        saveEntry(data)
     }
 })();

@@ -141,6 +141,19 @@ func (plugin *Plugin) loadTools(payloadPath string) error {
 		return err
 	}
 
+	err = plugin.VM.Set("getBase64", func(file string) string {
+		path := path.Join(payloadPath, file)
+		content, err := getFileBase64(path)
+		if err != nil {
+			log.Printf("error %s reading content of %s\n", err, path)
+			return ""
+		}
+		return content
+	})
+	if err != nil {
+		return err
+	}
+
 	err = plugin.VM.Set("getContentType", func(file string) string {
 		path := path.Join(payloadPath, file)
 		contentType, err := getFileContentType(path)
@@ -210,6 +223,17 @@ func getFileContent(file string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	output := string([]byte(content))
+	return output, nil
+}
+
+func getFileBase64(file string) (string, error) {
+	content, err := ioutil.ReadFile(file)
+	if err != nil {
+		return "", err
+	}
+
 	encoded := base64.StdEncoding.EncodeToString([]byte(content))
 	return encoded, nil
 }

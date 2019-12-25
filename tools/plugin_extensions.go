@@ -16,5 +16,13 @@ func LoadPluginExtenstions(vm *otto.Otto) error {
 	if err != nil {
 		return err
 	}
+
+	err = vm.Set("StringReplace", func(s string, old string, new string) string {
+		return strings.TrimSpace(strings.Replace(s, old, new, -1))
+	})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
