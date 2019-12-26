@@ -13,7 +13,6 @@
                 data = {
                     "id": getFileChecksum(file),
                     "table": "accounts",
-                    "provider": _provider,
                     "name": file,
                     "content-type": "application/json",
                     "content": JSON.parse(content)
@@ -28,16 +27,43 @@
                     checksum = getChecksum(JSON.stringify(tweet));
                     createdDate = stringToDate(tweet.created_at);
                     created = ISODateString(createdDate);
-                    data = {
+                    tweetData = {
                         "id": checksum,
                         "created": created,
                         "table": "posts",
-                        "provider": _provider,
                         "name": "tweet-" + tweet.id,
                         "content-type": "application/json",
                         "content": tweet
                     }
-                    saveEntry(data);
+                    saveEntry(tweetData);
+                    for(ti in tweet.entities.hashtags) {
+                        hashTag = tweet.entities.hashtags[ti];
+                        hashTag["tweet_id"] = checksum;
+                        hashTag["tweet_name"] = "tweet-" + tweet.id;
+                        hashTagData = {
+                            "id": getChecksum(JSON.stringify(hashTag)),
+                            "created": created,
+                            "table": "tags",
+                            "name": hashTag.text,
+                            "content-type": "application/json",
+                            "content": hashTag
+                        }
+                        saveEntry(hashTagData);
+                    }
+                    for(mi in tweet.entities.user_mentions) {
+                        mention = tweet.entities.user_mentions[mi];
+                        mention["tweet_id"] = checksum;
+                        mention["tweet_name"] = "tweet-" + tweet.id;
+                        mentionData = {
+                            "id": getChecksum(JSON.stringify(mention)),
+                            "created": created,
+                            "table": "mentions",
+                            "name": mention.screen_name,
+                            "content-type": "application/json",
+                            "content": mention
+                        }
+                        saveEntry(mentionData);
+                    }
                 }
             default:
                 contentType = getContentType(file);
@@ -47,7 +73,6 @@
                     data = {
                         "id": checksum,
                         "table": "images",
-                        "provider": _provider,
                         "file": file,
                         "name": name,
                         "content-type": contentType,
@@ -57,7 +82,6 @@
                     data = {
                         "id": checksum,
                         "table": "files",
-                        "provider": _provider,
                         "name": file,
                         "content-type": contentType,
                         "content": getBase64(file)
