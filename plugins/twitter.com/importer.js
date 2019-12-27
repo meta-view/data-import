@@ -1,7 +1,7 @@
 (function(){
-    console.log("[twitter.com] Import payload " + _payloadPath);
+    console.log("[" + _provider + "] Import payload " + _payloadPath);
     files = listFiles()
-    console.log("[twitter.com] loading " + files.length + " files");
+    console.log("[" + _provider + "] loading " + files.length + " files");
     for (i in files) {
         saveData(files[i]);
     }

@@ -43,10 +43,21 @@ func main() {
 func testDB(db *services.Database) {
 	data := make(map[string]interface{})
 	data["table"] = "testDB"
+	data["provider"] = "testProvider"
 	data["date"] = time.Now()
 	id, err := db.SaveEntry(data)
 	if err != nil {
 		log.Printf("error %v", err)
 	}
 	log.Printf("inserting %s as id %s\n", data, id)
+
+	query := make(map[string]interface{})
+	query["table"] = data["table"]
+	query["provider"] = data["provider"]
+	query["id"] = id
+	output, err := db.ReadEntries(query)
+	if err != nil {
+		log.Printf("error %v", err)
+	}
+	log.Printf("Reading id %s as %s\n", id, output)
 }

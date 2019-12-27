@@ -146,32 +146,48 @@ func (db *Database) checkTable(table string) error {
 // ReadEntries - queries the database for all entries
 func (db *Database) ReadEntries(query map[string]interface{}) (map[string]interface{}, error) {
 	output := make(map[string]interface{})
-	if query["table"] != nil {
+	if query["table"] == nil {
 		return output, errors.New("'table' need to be set for now")
 	}
-	return output, nil
+	return db.queryTable(fmt.Sprintf("%v", query["table"]), query)
 }
 
 func (db *Database) queryTable(table string, query map[string]interface{}) (map[string]interface{}, error) {
 	i := 0
 	l := len(query) - 1
 	output := make(map[string]interface{})
-	queryStmt := fmt.Sprintf("SELECT * FROM %s ", table)
+	queryStmt := fmt.Sprintf("SELECT * FROM %s WHERE ", table)
 	for k, v := range query {
-		i++
 		if k != "table" {
-			queryStmt += fmt.Sprintf(" %s = %s", k, v)
-		}
-		log.Printf("i: %d, l: %d\n", i, l)
-		if i < l {
-			queryStmt += " AND "
+			i++
+			queryStmt += fmt.Sprintf(" %s='%s'", k, v)
+			if i < l {
+				queryStmt += " AND "
+			}
 		}
 	}
-	stmt, err := db.DB.Prepare(queryStmt)
+	log.Printf("query: %s\n", queryStmt)
+	rows, err := db.DB.Query(queryStmt)
 	if err != nil {
 		return output, err
 	}
-	defer stmt.Close()
+
+	data := make(map[string]interface{})
+	var id, provider, imported, created, updated, content string
+	for rows.Next() {
+		err = rows.Scan(&id, &provider, &imported, &created, &updated, &content)
+		if err == nil {
+			data["id"] = id
+			data["imported"] = imported
+			data["created"] = created
+			data["updated"] = updated
+			data["content"] = content
+			output[id] = data
+		} else {
+			log.Printf("Error %s while loading row.\n", err.Error())
+		}
+	}
+	rows.Close()
 	return output, nil
 }
 
