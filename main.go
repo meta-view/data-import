@@ -33,7 +33,8 @@ func main() {
 	router := httprouter.New()
 	//router.ServeFiles("/assets/*filepath", http.Dir("assets"))
 	router.GET("/assets/*filepath", handlers.AssetsHandler())
-	router.GET("/", handlers.IndexHandler())
+	router.GET("/", handlers.IndexHandler(plugins, db))
+	router.GET("/form", handlers.UploadFormHandler())
 	router.POST("/import", handlers.ImportHandler(plugins))
 	log.Printf("Serving Application on port %d", port)
 

@@ -10,7 +10,15 @@ import (
 // LoadPluginExtenstions - adds JS extensions to otto vm runtime
 func LoadPluginExtenstions(vm *otto.Otto) error {
 	log.Println("installing JS Extensions")
-	err := loadStringExtensions(vm)
+
+	err := vm.Set("getChecksum", func(content string) string {
+		return getSha1Checksum(content)
+	})
+	if err != nil {
+		return err
+	}
+
+	err = loadStringExtensions(vm)
 	if err != nil {
 		return err
 	}

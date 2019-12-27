@@ -35,12 +35,12 @@ func LoadTemplates() {
 		templates = make(map[string]*template.Template)
 	}
 
-	layoutFiles, err := filepath.Glob(templateConfig.TemplateLayoutPath + "*.tmpl")
+	layoutFiles, err := filepath.Glob(templateConfig.TemplateLayoutPath + "*.html")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	includeFiles, err := filepath.Glob(templateConfig.TemplateIncludePath + "*.tmpl")
+	includeFiles, err := filepath.Glob(templateConfig.TemplateIncludePath + "*.html")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -58,7 +58,11 @@ func LoadTemplates() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		templates[fileName] = template.Must(templates[fileName].ParseFiles(files...))
+		templates[fileName] = template.Must(templates[fileName].Funcs(template.FuncMap{
+			"htmlSafe": func(html string) template.HTML {
+				return template.HTML(html)
+			},
+		}).ParseFiles(files...))
 	}
 
 	log.Println("templates loading successful")

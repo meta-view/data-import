@@ -156,7 +156,10 @@ func (db *Database) queryTable(table string, query map[string]interface{}) (map[
 	i := 0
 	l := len(query) - 1
 	output := make(map[string]interface{})
-	queryStmt := fmt.Sprintf("SELECT * FROM %s WHERE ", table)
+	queryStmt := fmt.Sprintf("SELECT * FROM %s ", table)
+	if len(query) > 1 {
+		queryStmt += " WHERE "
+	}
 	for k, v := range query {
 		if k != "table" {
 			i++
@@ -177,12 +180,17 @@ func (db *Database) queryTable(table string, query map[string]interface{}) (map[
 	for rows.Next() {
 		err = rows.Scan(&id, &provider, &imported, &created, &updated, &content)
 		if err == nil {
+			if output[provider] == nil {
+				output[provider] = make(map[string]interface{})
+			}
 			data["id"] = id
 			data["imported"] = imported
 			data["created"] = created
 			data["updated"] = updated
 			data["content"] = content
-			output[id] = data
+			entries := output[provider].(map[string]interface{})
+			entries[id] = data
+			output[provider] = entries
 		} else {
 			log.Printf("Error %s while loading row.\n", err.Error())
 		}

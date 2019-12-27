@@ -46,10 +46,15 @@ func LoadPlugin(pluginPath string, db *services.Database) (*Plugin, error) {
 
 // Detect - returns the percentage if a given payload is of the type of the plugin
 func (plugin *Plugin) Detect(payloadPath string) (float64, error) {
-	log.Printf("Detect if %s is for [%s]", payloadPath, plugin.Provider.Name)
+	log.Printf("Detecting if %s is for [%s]\n", payloadPath, plugin.Provider.Name)
 	output := 0.0
 
-	err := plugin.loadTools(payloadPath)
+	err := LoadPluginExtenstions(plugin.VM)
+	if err != nil {
+		return output, err
+	}
+
+	err = plugin.loadFileTools(payloadPath)
 	if err != nil {
 		return output, err
 	}
@@ -73,15 +78,25 @@ func (plugin *Plugin) Detect(payloadPath string) (float64, error) {
 	if err != nil {
 		return output, err
 	}
-	log.Printf("result: %f", value)
+	log.Printf("Detector result: %f", value)
 	return value, nil
 }
 
 // Import - imports the payload into a specific data structure
 func (plugin *Plugin) Import(payloadPath string) error {
-	log.Printf("Import data of %s for [%s]", payloadPath, plugin.Provider.Name)
+	log.Printf("Importing data of %s for [%s]\n", payloadPath, plugin.Provider.Name)
 
-	err := plugin.loadTools(payloadPath)
+	err := LoadPluginExtenstions(plugin.VM)
+	if err != nil {
+		return err
+	}
+
+	err = plugin.loadFileTools(payloadPath)
+	if err != nil {
+		return err
+	}
+
+	err = plugin.loadDBTools()
 	if err != nil {
 		return err
 	}
@@ -105,9 +120,42 @@ func (plugin *Plugin) Import(payloadPath string) error {
 	return nil
 }
 
-func (plugin *Plugin) loadTools(payloadPath string) error {
-	LoadPluginExtenstions(plugin.VM)
-	log.Printf("installing tools for path %s", payloadPath)
+// Present - queries and presents a given list of found elements
+func (plugin *Plugin) Present(entries map[string]interface{}, render string) ([]string, error) {
+	log.Printf("Presenting results for [%s]\n", plugin.Provider.Name)
+	output := make([]string, 0)
+
+	err := LoadPluginExtenstions(plugin.VM)
+	if err != nil {
+		return output, err
+	}
+
+	script, err := ioutil.ReadFile(path.Join(plugin.Path, "presenter.js"))
+	if err != nil {
+		return output, err
+	}
+
+	plugin.VM.Set("render", render)
+
+	for _, entry := range entries {
+		plugin.VM.Set("entry", entry)
+		result, err := plugin.VM.Run(script)
+		if err != nil {
+			return output, err
+		}
+
+		value, err := result.ToString()
+		if err != nil {
+			return output, err
+		}
+
+		output = append(output, value)
+	}
+	return output, nil
+}
+
+func (plugin *Plugin) loadFileTools(payloadPath string) error {
+	log.Printf("Installing tools for path %s", payloadPath)
 	plugin.VM.Set("_provider", plugin.Provider.Name)
 
 	err := plugin.VM.Set("readDir", func() []string {
@@ -176,14 +224,11 @@ func (plugin *Plugin) loadTools(payloadPath string) error {
 		return err
 	}
 
-	err = plugin.VM.Set("getChecksum", func(content string) string {
-		return getSha1Checksum(content)
-	})
-	if err != nil {
-		return err
-	}
+	return nil
+}
 
-	err = plugin.VM.Set("saveEntry", func(data map[string]interface{}) string {
+func (plugin *Plugin) loadDBTools() error {
+	err := plugin.VM.Set("saveEntry", func(data map[string]interface{}) string {
 		data["provider"] = plugin.Provider.Name
 		id, err := plugin.DB.SaveEntry(data)
 		if err != nil {
@@ -215,7 +260,7 @@ func (plugin *Plugin) loadTools(payloadPath string) error {
 func readFiles(parent string, child string, filesOnly bool) []string {
 	folder := path.Join(parent, child)
 	files := make([]string, 0)
-	log.Printf("reading folder %s\n", folder)
+	log.Printf("Reading folder %s\n", folder)
 	folders, err := ioutil.ReadDir(folder)
 	if err != nil {
 		log.Printf("error reading %s\n", folder)
