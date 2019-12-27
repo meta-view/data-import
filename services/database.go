@@ -143,6 +143,38 @@ func (db *Database) checkTable(table string) error {
 	return nil
 }
 
+// ReadEntries - queries the database for all entries
+func (db *Database) ReadEntries(query map[string]interface{}) (map[string]interface{}, error) {
+	output := make(map[string]interface{})
+	if query["table"] != nil {
+		return output, errors.New("'table' need to be set for now")
+	}
+	return output, nil
+}
+
+func (db *Database) queryTable(table string, query map[string]interface{}) (map[string]interface{}, error) {
+	i := 0
+	l := len(query) - 1
+	output := make(map[string]interface{})
+	queryStmt := fmt.Sprintf("SELECT * FROM %s ", table)
+	for k, v := range query {
+		i++
+		if k != "table" {
+			queryStmt += fmt.Sprintf(" %s = %s", k, v)
+		}
+		log.Printf("i: %d, l: %d\n", i, l)
+		if i < l {
+			queryStmt += " AND "
+		}
+	}
+	stmt, err := db.DB.Prepare(queryStmt)
+	if err != nil {
+		return output, err
+	}
+	defer stmt.Close()
+	return output, nil
+}
+
 // Close - closes the main DB
 func (db *Database) Close() {
 	db.DB.Close()

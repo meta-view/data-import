@@ -36,6 +36,20 @@
                         "content": tweet
                     }
                     saveEntry(tweetData);
+                    if(tweet.geo) {
+                        geo = tweet.geo;
+                        geo["tweet_id"] = checksum;
+                        geo["tweet_name"] = "tweet-" + tweet.id;
+                        geoData = {
+                            "id": getChecksum(JSON.stringify(hashTag)),
+                            "created": created,
+                            "table": "locations",
+                            "name": "geo-" + tweet.id,
+                            "content-type": "application/json",
+                            "content": geo
+                        }
+                        saveEntry(geoData);
+                    }
                     for(ti in tweet.entities.hashtags) {
                         hashTag = tweet.entities.hashtags[ti];
                         hashTag["tweet_id"] = checksum;

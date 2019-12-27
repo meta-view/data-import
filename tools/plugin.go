@@ -26,10 +26,6 @@ type Plugin struct {
 	DB       *services.Database
 }
 
-// Object - a Javascript Object
-type Object struct {
-}
-
 // LoadPlugin - loads one plugin
 func LoadPlugin(pluginPath string, db *services.Database) (*Plugin, error) {
 	data, err := ioutil.ReadFile(path.Join(pluginPath, "package.json"))
@@ -195,6 +191,19 @@ func (plugin *Plugin) loadTools(payloadPath string) error {
 			return ""
 		}
 		return id
+	})
+	if err != nil {
+		return err
+	}
+
+	err = plugin.VM.Set("readEntry", func(query map[string]interface{}) map[string]interface{} {
+		entries, err := plugin.DB.ReadEntries(query)
+		if err != nil {
+			log.Printf("error %s reading with query %s\n", err, query)
+			empty := make(map[string]interface{}, 0)
+			return empty
+		}
+		return entries
 	})
 	if err != nil {
 		return err
