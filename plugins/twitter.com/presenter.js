@@ -22,10 +22,10 @@
     }
 
     function renderDetail(entry) {
-        out = '';
+        var out = '';
         switch(entry["table"]) {
         case "images":
-            out += '<div class="card p-3">';
+            out += '<div id={{id}}" class="card p-3">';
             out += '    <a href="" class="mb-3">';
             out += '        <img src="{{image}}" alt="Photo by {{author}}" class="rounded">';
             out += '    </a>';
@@ -41,7 +41,11 @@
             out += '        </div>';
             out += '    </div>';
             out += '</div>';
-            break;
+            var content = JSON.parse(entry["content"]);
+            var type = content["content-type"].replace("image/", "");
+            out = out.replace("{{id}}", entry["id"]);
+            out = out.replace("{{image}}", "data:image/"+type+";base64,"+content["content"]);
+            return out;
         default:
             out += '<div class="card">';
             out += '    <div class="card-body d-flex flex-column">';

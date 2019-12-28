@@ -149,19 +149,22 @@ func (db *Database) ReadEntries(query map[string]interface{}) (map[string]interf
 	if query["table"] == nil {
 		return output, errors.New("'table' need to be set for now")
 	}
+	if query["limit"] == nil {
+		query["limit"] = "100"
+	}
 	return db.queryTable(fmt.Sprintf("%v", query["table"]), query)
 }
 
 func (db *Database) queryTable(table string, query map[string]interface{}) (map[string]interface{}, error) {
 	i := 0
-	l := len(query) - 1
+	l := len(query) - 2
 	output := make(map[string]interface{})
 	queryStmt := fmt.Sprintf("SELECT * FROM %s ", table)
-	if len(query) > 1 {
+	if len(query) > 2 {
 		queryStmt += " WHERE "
 	}
 	for k, v := range query {
-		if k != "table" {
+		if k != "table" && k != "limit" {
 			i++
 			queryStmt += fmt.Sprintf(" %s='%s'", k, v)
 			if i < l {
@@ -169,28 +172,27 @@ func (db *Database) queryTable(table string, query map[string]interface{}) (map[
 			}
 		}
 	}
+	queryStmt += fmt.Sprintf(" LIMIT %s;", query["limit"])
 	log.Printf("query: %s\n", queryStmt)
 	rows, err := db.DB.Query(queryStmt)
 	if err != nil {
 		return output, err
 	}
 
-	data := make(map[string]interface{})
-	var id, provider, imported, created, updated, content string
 	for rows.Next() {
+		data := make(map[string]interface{})
+		var id, provider, imported, created, updated, content string
 		err = rows.Scan(&id, &provider, &imported, &created, &updated, &content)
 		if err == nil {
-			if output[provider] == nil {
-				output[provider] = make(map[string]interface{})
-			}
 			data["id"] = id
+			data["table"] = table
 			data["imported"] = imported
 			data["created"] = created
 			data["updated"] = updated
+			data["provider"] = provider
 			data["content"] = content
-			entries := output[provider].(map[string]interface{})
-			entries[id] = data
-			output[provider] = entries
+			log.Printf("Adding new entry %s for %s\n", data["id"], data["provider"])
+			output[id] = data
 		} else {
 			log.Printf("Error %s while loading row.\n", err.Error())
 		}

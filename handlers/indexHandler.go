@@ -5,6 +5,7 @@ import (
 	"meta-view-service/services"
 	"meta-view-service/tools"
 	"net/http"
+	"strings"
 
 	"github.com/julienschmidt/httprouter"
 )
@@ -16,7 +17,7 @@ func IndexHandler(plugins map[string]*tools.Plugin, db *services.Database) httpr
 		query := make(map[string]interface{})
 		log.Printf("queryValues: %s\n", queryValues)
 		for k, v := range queryValues {
-			query[k] = v
+			query[k] = strings.Join(v, "")
 		}
 		if query["table"] == nil {
 			query["table"] = "testDB"
@@ -29,12 +30,17 @@ func IndexHandler(plugins map[string]*tools.Plugin, db *services.Database) httpr
 		}
 
 		elements := make([]string, 0)
-		for provider := range results {
+		var element map[string]interface{}
+		for id := range results {
+			element = results[id].(map[string]interface{})
+			provider := element["provider"].(string)
 			plugin := plugins[provider]
-			pluginResults := results[provider].(map[string]interface{})
-			renders, err := plugin.Present(pluginResults, "")
+			render, err := plugin.Present(element, "")
+			log.Printf("render length: %d for id %s and provider %s", len(render), id, provider)
 			if err == nil {
-				elements = append(elements, renders...)
+				elements = append(elements, render)
+			} else {
+				log.Println(err)
 			}
 		}
 		renderTemplate(w, "index.html", elements)

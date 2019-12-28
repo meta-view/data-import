@@ -121,37 +121,32 @@ func (plugin *Plugin) Import(payloadPath string) error {
 }
 
 // Present - queries and presents a given list of found elements
-func (plugin *Plugin) Present(entries map[string]interface{}, render string) ([]string, error) {
-	log.Printf("Presenting results for [%s]\n", plugin.Provider.Name)
-	output := make([]string, 0)
-
-	err := LoadPluginExtenstions(plugin.VM)
-	if err != nil {
-		return output, err
-	}
+func (plugin *Plugin) Present(entry map[string]interface{}, render string) (string, error) {
+	log.Printf("Presenting result id %s for [%s]", entry["id"], plugin.Provider.Name)
+	output := ""
 
 	script, err := ioutil.ReadFile(path.Join(plugin.Path, "presenter.js"))
 	if err != nil {
 		return output, err
 	}
 
-	plugin.VM.Set("render", render)
-
-	for _, entry := range entries {
-		plugin.VM.Set("entry", entry)
-		result, err := plugin.VM.Run(script)
-		if err != nil {
-			return output, err
-		}
-
-		value, err := result.ToString()
-		if err != nil {
-			return output, err
-		}
-
-		output = append(output, value)
+	err = LoadPluginExtenstions(plugin.VM)
+	if err != nil {
+		return output, err
 	}
-	return output, nil
+	plugin.VM.Set("render", render)
+	plugin.VM.Set("entry", entry)
+	result, err := plugin.VM.Run(script)
+	if err != nil {
+		return output, err
+	}
+
+	value, err := result.ToString()
+	if err != nil {
+		return output, err
+	}
+
+	return value, nil
 }
 
 func (plugin *Plugin) loadFileTools(payloadPath string) error {
