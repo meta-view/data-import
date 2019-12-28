@@ -1,0 +1,40 @@
+{{define "title"}}Meta-View Import{{end}}
+{{define "content"}}
+  <div class="container">
+    <div class="page-header">
+      <h1 class="page-title">
+        Import Data
+      </h1>
+    </div>
+    <div tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Choose an Importer</h5>
+                </div>
+                <div class="modal-body">
+                    {{range $key, $value := .}}
+                        <p>Import<br /><pre>{{$key}}</pre></p>
+                        <table class="table">
+                        {{range $markers := $value}}
+                            {{range $key2, $value2 := $markers}}
+                            <tr>
+                                <th>Detection: <strong>{{$value2}}</strong>%</th>
+                                <td>
+                                    <form action="/import" method="post">
+                                        <input type="hidden" name="file" value="{{$key}}" />
+                                        <input type="hidden" name="provider" value="{{$key2}}" />
+                                        <button type="submit" class="btn btn-primary btn-block">with {{$key2}} plugin</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {{end}}
+                        {{end}}
+                        </table>
+                    {{end}}
+                </div>
+            </div>
+        </div>
+    </div>
+  </div>
+{{end}}

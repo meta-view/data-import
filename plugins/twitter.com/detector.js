@@ -1,6 +1,6 @@
 (function(){
     var output = 0.0;
-    var markers = ["account.js", "block.js", "profile.js", "tweet.js", "like.js", "direct-message.js", "README.txt"];
+    var markers = ["tweet_media", "account.js", "block.js", "profile.js", "tweet.js", "like.js", "direct-message.js", "README.txt"];
     var part = 100 / markers.length;
 
     console.log("[" + _provider + "] Checking payload " + _payloadPath);

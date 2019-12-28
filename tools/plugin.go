@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"math"
 	"meta-view-service/services"
 	"net/http"
 	"os"
@@ -79,7 +80,7 @@ func (plugin *Plugin) Detect(payloadPath string) (float64, error) {
 		return output, err
 	}
 	log.Printf("Detector result: %f", value)
-	return value, nil
+	return math.Round(value*100) / 100, nil
 }
 
 // Import - imports the payload into a specific data structure

@@ -35,7 +35,9 @@ func main() {
 	router.GET("/assets/*filepath", handlers.AssetsHandler())
 	router.GET("/", handlers.IndexHandler(plugins, db))
 	router.GET("/form", handlers.UploadFormHandler())
+	router.POST("/upload", handlers.UploadHandler(plugins))
 	router.POST("/import", handlers.ImportHandler(plugins))
+
 	log.Printf("Serving Application on port %d", port)
 
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), router))

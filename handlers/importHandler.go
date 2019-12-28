@@ -28,19 +28,19 @@ func init() {
 	}
 }
 
-// ImportHandler - deals with the import of dumps
-func ImportHandler(plugins map[string]*tools.Plugin) httprouter.Handle {
+// UploadHandler - deals with the upload of dumps
+func UploadHandler(plugins map[string]*tools.Plugin) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		handleUpload(w, r, plugins)
 	}
 }
 
 func handleUpload(w http.ResponseWriter, r *http.Request, plugins map[string]*tools.Plugin) {
-
 	r.ParseMultipartForm(512 << 20)
-
+	data := make(map[string]interface{})
 	fhs := r.MultipartForm.File["files[]"]
 	for _, fh := range fhs {
+		fileData := make(map[string]interface{})
 		file, err := fh.Open()
 		if err != nil {
 			log.Println(err)
@@ -48,16 +48,17 @@ func handleUpload(w http.ResponseWriter, r *http.Request, plugins map[string]*to
 		}
 		defer file.Close()
 		log.Printf("uploaded: %v\n", fh.Header)
-		filename := path.Join(zipDataDirectory, fh.Filename)
-		f, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE, 0666)
+		filename := fh.Filename
+		zipFile := path.Join(zipDataDirectory, filename)
+		f, err := os.OpenFile(zipFile, os.O_WRONLY|os.O_CREATE, 0666)
 		if err != nil {
 			log.Println(err)
 			return
 		}
 		defer f.Close()
 		io.Copy(f, file)
-		dest := strings.Replace(strings.Replace(filename, zipDataDirectory, rawDataDirectory, 1), ".zip", "", 1)
-		files, err := importData(filename, dest)
+		dest := strings.Replace(strings.Replace(zipFile, zipDataDirectory, rawDataDirectory, 1), ".zip", "", 1)
+		files, err := saveData(zipFile, dest)
 
 		for _, file := range files {
 			log.Printf("extracting file %s\n", file)
@@ -73,18 +74,14 @@ func handleUpload(w http.ResponseWriter, r *http.Request, plugins map[string]*to
 			}
 		}
 
-		for _, plugin := range plugins {
-			err := plugin.Import(dest)
-			if err != nil {
-				log.Printf("Error: %s\n", err)
-			}
-		}
+		fileData["markers"] = markers
+		data[filename] = fileData
 	}
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	renderTemplate(w, "importForm.html", data)
 }
 
-func importData(src string, dest string) ([]string, error) {
-	log.Printf("importing %s to %s\n", src, dest)
+func saveData(src string, dest string) ([]string, error) {
+	log.Printf("extracting %s to %s\n", src, dest)
 	var filenames []string
 
 	if strings.HasSuffix(src, ".zip") {
@@ -140,6 +137,26 @@ func importData(src string, dest string) ([]string, error) {
 		return filenames, nil
 	}
 	return filenames, nil
+}
+
+// ImportHandler - deals with the data import
+func ImportHandler(plugins map[string]*tools.Plugin) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		r.ParseForm()
+		file := r.FormValue("file")
+		provider := r.FormValue("provider")
+		log.Printf("Importing using %s for file %s", provider, file)
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+	}
+}
+
+func handleImport(plugin *tools.Plugin, dest string) {
+	log.Printf("importing %s using %s\n", dest, plugin.Provider.Name)
+
+	err := plugin.Import(dest)
+	if err != nil {
+		log.Printf("Error: %s\n", err)
+	}
 }
 
 // ImportDoneHandler - showing some stats about the imported data

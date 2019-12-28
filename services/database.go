@@ -191,7 +191,7 @@ func (db *Database) queryTable(table string, query map[string]interface{}) (map[
 			data["updated"] = updated
 			data["provider"] = provider
 			data["content"] = content
-			log.Printf("Adding new entry %s for %s\n", data["id"], data["provider"])
+			log.Printf("Reading entry %s for %s\n", data["id"], data["provider"])
 			output[id] = data
 		} else {
 			log.Printf("Error %s while loading row.\n", err.Error())
