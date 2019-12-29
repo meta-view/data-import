@@ -57,6 +57,7 @@ func handleUpload(w http.ResponseWriter, r *http.Request, plugins map[string]*to
 		}
 		defer f.Close()
 		io.Copy(f, file)
+		foldername := strings.Replace(filename, ".zip", "", 1)
 		dest := strings.Replace(strings.Replace(zipFile, zipDataDirectory, rawDataDirectory, 1), ".zip", "", 1)
 		files, err := saveData(zipFile, dest)
 
@@ -75,7 +76,7 @@ func handleUpload(w http.ResponseWriter, r *http.Request, plugins map[string]*to
 		}
 
 		fileData["markers"] = markers
-		data[filename] = fileData
+		data[foldername] = fileData
 	}
 	renderTemplate(w, "importForm.html", data)
 }
@@ -146,6 +147,8 @@ func ImportHandler(plugins map[string]*tools.Plugin) httprouter.Handle {
 		file := r.FormValue("file")
 		provider := r.FormValue("provider")
 		log.Printf("Importing using %s for file %s", provider, file)
+		dest := path.Join(rawDataDirectory, file)
+		handleImport(plugins[provider], dest)
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 	}
 }
