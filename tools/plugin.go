@@ -151,7 +151,7 @@ func (plugin *Plugin) Present(entry map[string]interface{}, render string) (stri
 }
 
 func (plugin *Plugin) loadFileTools(payloadPath string) error {
-	log.Printf("Installing tools for path %s", payloadPath)
+	log.Printf("Installing file tools in path %s for plugin %s", payloadPath, plugin.Provider.Name)
 	plugin.VM.Set("_provider", plugin.Provider.Name)
 
 	err := plugin.VM.Set("readDir", func() []string {
@@ -224,6 +224,7 @@ func (plugin *Plugin) loadFileTools(payloadPath string) error {
 }
 
 func (plugin *Plugin) loadDBTools() error {
+	log.Printf("Installing DB tools for plugin %s", plugin.Provider.Name)
 	err := plugin.VM.Set("saveEntry", func(data map[string]interface{}) string {
 		data["provider"] = plugin.Provider.Name
 		id, err := plugin.DB.SaveEntry(data)

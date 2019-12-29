@@ -2,8 +2,15 @@
     console.log("[" + _provider + "] Import payload " + _payloadPath);
     files = listFiles()
     console.log("[" + _provider + "] loading " + files.length + " files");
+
+    // Importing files into the database
     for (i in files) {
         saveData(files[i]);
+    }
+
+    // Linking files, and adding additional info defails.
+    for (i in files) {
+        linkFiles(files[i]);
     }
 
     function saveData(file) {
@@ -105,6 +112,33 @@
         }
     }
 
+    function linkFiles(file) {
+        switch (file) {
+            case "tweet.js":
+                content = StringReplace(getContent(file), "window.YTD.tweet.part0 = ", "");
+                tweets = JSON.parse(content);
+                for (i in tweets) {
+                    tweet = tweets[i];
+                    checksum = getChecksum(JSON.stringify(tweet));
+                    createdDate = stringToDate(tweet.created_at);
+                    created = ISODateString(createdDate);
+                    if(tweet.extended_entities && tweet.extended_entities.media) {
+                        for(mi in tweet.extended_entities.media) {
+                            mediaFile = tweet.extended_entities.media[mi];
+                            filename = mediaFile.media_url.replace("http://pbs.twimg.com/media/", "");
+                            console.log("updating image " + filename + " for tweet " + checksum);
+                            query = {"table":"images", "content": {"name": filename}};
+                            images = readEntry(query);
+                            for (i in images) {
+                                image = images[i];
+                                console.log("image: " + image.id)
+                            }
+                        }
+                    }
+                }
+            break;
+        }
+    }
     function splitToLastBy(element, divider) {
         parts = element.split(divider);
         return parts[parts.length - 1];
@@ -113,8 +147,8 @@
     // see https://stackoverflow.com/a/13133124
     function stringToDate(s) {
         var b = s.split(/[: ]/g);
-        var m = {jan:0, feb:1, mar:2, apr:3, may:4, jun:5, jul:6,
-                    aug:7, sep:8, oct:9, nov:10, dec:11};
+        var m = {   jan:0, feb:1, mar:2, apr:3, may:4, jun:5, 
+                    jul:6, aug:7, sep:8, oct:9, nov:10, dec:11};
         return new Date(Date.UTC(b[7], m[b[1].toLowerCase()], b[2], b[3], b[4], b[5]));
     }
 

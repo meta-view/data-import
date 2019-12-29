@@ -53,7 +53,11 @@ func (db *Database) SaveEntry(data map[string]interface{}) (string, error) {
 	if table == "" {
 		return "", errors.New("table to set")
 	}
-	db.checkTable(table)
+	err := db.checkTable(table)
+	if err != nil {
+		return "", err
+	}
+
 	if data["id"] == nil {
 		ID := uuid.New()
 		data["id"] = ID.String()
@@ -83,7 +87,7 @@ func (db *Database) insertOrUpdateEntry(data map[string]interface{}) (string, er
 		return "", err
 	}
 
-	sqlStmt := fmt.Sprintf("INSERT INTO %s(id, provider, imported, created, updated, content) VALUES(?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET provider=?, imported=?, created=?, updated=?, content=? WHERE id = ?;", data["table"])
+	sqlStmt := fmt.Sprintf("INSERT INTO %s(id, provider, imported, created, updated, content) VALUES (?, ?, ?, ?, ?, json(?)) ON CONFLICT(id) DO UPDATE SET provider=?, imported=?, created=?, updated=?, content=json(?) WHERE id = ?;", data["table"])
 
 	stmt, err := tx.Prepare(sqlStmt)
 	if err != nil {
@@ -127,18 +131,26 @@ func (db *Database) checkTable(table string) error {
 	err = stmt.QueryRow(table).Scan(&name)
 	if err != nil && err == sql.ErrNoRows {
 		sqlStmt = fmt.Sprintf("CREATE TABLE %s (id TEXT not null primary key, provider TEXT, imported TEXT, created TEXT, updated TEXT, content TEXT);", table)
-		log.Printf("created table %s\n", table)
 		_, err = db.DB.Exec(sqlStmt)
 		if err != nil {
 			return err
 		}
+		log.Printf("created table %s\n", table)
 
 		sqlStmt = fmt.Sprintf("CREATE UNIQUE INDEX idx_%s_id ON %s(id);", table, table)
-		log.Printf("created index for table %s\n", table)
 		_, err = db.DB.Exec(sqlStmt)
 		if err != nil {
 			return err
 		}
+		log.Printf("created index for table %s\n", table)
+
+		//sqlStmt = fmt.Sprintf("CREATE INDEX idx_%s_json_name ON %s ( json_value(json_text, 'name') COLLATE NOCASE );", table, table)
+		//_, err = db.DB.Exec(sqlStmt)
+		//if err != nil {
+		//	return err
+		//}
+		//log.Printf("created JSON index for table %s\n", table)
+
 	}
 	return nil
 }
@@ -152,22 +164,50 @@ func (db *Database) ReadEntries(query map[string]interface{}) (map[string]interf
 	if query["limit"] == nil {
 		query["limit"] = "100"
 	}
+	if query["content"] == nil {
+		query["content"] = make(map[string]interface{})
+	}
 	return db.queryTable(fmt.Sprintf("%v", query["table"]), query)
 }
 
 func (db *Database) queryTable(table string, query map[string]interface{}) (map[string]interface{}, error) {
 	i := 0
-	l := len(query) - 2
+	l := len(query) - 3
+	hasWhere := false
+	contentSelect := ""
+	contentQuery := query["content"].(map[string]interface{})
+	cl := len(contentQuery)
+	/*
+		if cl > 0 {
+			for k := range contentQuery {
+				contentSelect += fmt.Sprintf(", json_extract(content, '$.%s') AS content_%s", k, k)
+			}
+		}
+	*/
 	output := make(map[string]interface{})
-	queryStmt := fmt.Sprintf("SELECT * FROM %s ", table)
-	if len(query) > 2 {
+	queryStmt := fmt.Sprintf("SELECT id, provider, imported, created, updated, content %s FROM %s ", contentSelect, table)
+	if len(query) > 3 {
 		queryStmt += " WHERE "
+		hasWhere = true
 	}
 	for k, v := range query {
-		if k != "table" && k != "limit" {
+		if k != "table" && k != "limit" && k != "content" {
 			i++
 			queryStmt += fmt.Sprintf(" %s='%s'", k, v)
 			if i < l {
+				queryStmt += " AND "
+			}
+		}
+	}
+	i = 0
+	if cl > 0 {
+		if !hasWhere {
+			queryStmt += " WHERE "
+		}
+		for k, v := range contentQuery {
+			i++
+			queryStmt += fmt.Sprintf(" json_extract(content, '$.%s')='%s'", k, v)
+			if i < cl {
 				queryStmt += " AND "
 			}
 		}

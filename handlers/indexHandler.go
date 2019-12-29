@@ -36,7 +36,6 @@ func IndexHandler(plugins map[string]*tools.Plugin, db *services.Database) httpr
 			provider := element["provider"].(string)
 			plugin := plugins[provider]
 			render, err := plugin.Present(element, "")
-			log.Printf("render length: %d for id %s and provider %s", len(render), id, provider)
 			if err == nil {
 				elements = append(elements, render)
 			} else {
