@@ -7,7 +7,6 @@ import (
 	"meta-view-service/services"
 	"meta-view-service/tools"
 	"net/http"
-	"time"
 
 	"github.com/julienschmidt/httprouter"
 )
@@ -24,7 +23,6 @@ func main() {
 		log.Fatal(err)
 	}
 	defer db.Close()
-	testDB(db)
 
 	plugins, err := tools.LoadPlugins("plugins", db)
 	if err != nil {
@@ -41,26 +39,4 @@ func main() {
 	log.Printf("Serving Application on port %d", port)
 
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), router))
-}
-
-func testDB(db *services.Database) {
-	data := make(map[string]interface{})
-	data["table"] = "testDB"
-	data["provider"] = "testProvider"
-	data["date"] = time.Now()
-	id, err := db.SaveEntry(data)
-	if err != nil {
-		log.Printf("error %v", err)
-	}
-	log.Printf("inserting %s as id %s\n", data, id)
-
-	query := make(map[string]interface{})
-	query["table"] = data["table"]
-	query["provider"] = data["provider"]
-	query["id"] = id
-	output, err := db.ReadEntries(query)
-	if err != nil {
-		log.Printf("error %v", err)
-	}
-	log.Printf("Reading id %s as %s\n", id, output)
 }

@@ -177,13 +177,6 @@ func (db *Database) queryTable(table string, query map[string]interface{}) (map[
 	contentSelect := ""
 	contentQuery := query["content"].(map[string]interface{})
 	cl := len(contentQuery)
-	/*
-		if cl > 0 {
-			for k := range contentQuery {
-				contentSelect += fmt.Sprintf(", json_extract(content, '$.%s') AS content_%s", k, k)
-			}
-		}
-	*/
 	output := make(map[string]interface{})
 	queryStmt := fmt.Sprintf("SELECT id, provider, imported, created, updated, content %s FROM %s ", contentSelect, table)
 	if len(query) > 3 {
@@ -219,6 +212,7 @@ func (db *Database) queryTable(table string, query map[string]interface{}) (map[
 		return output, err
 	}
 
+	log.Printf("mapping results of %s to elements", query)
 	for rows.Next() {
 		data := make(map[string]interface{})
 		var id, provider, imported, created, updated, content string

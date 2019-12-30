@@ -15,18 +15,16 @@ func IndexHandler(plugins map[string]*tools.Plugin, db *services.Database) httpr
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		queryValues := r.URL.Query()
 		query := make(map[string]interface{})
-		log.Printf("queryValues: %s\n", queryValues)
 		for k, v := range queryValues {
 			query[k] = strings.Join(v, "")
 		}
 		if query["table"] == nil {
-			query["table"] = "testDB"
+			query["table"] = "images"
 		}
 		log.Printf("render results for %s\n", query)
 		results, err := db.ReadEntries(query)
 		if err != nil {
 			log.Println(err)
-			return
 		}
 
 		elements := make([]string, 0)

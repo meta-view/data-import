@@ -14,19 +14,18 @@
                 </div>
                 <div class="modal-body">
                     {{range $key, $value := .}}
-                        <p>Import<br /><pre>{{$key}}</pre></p>
+                        <p><pre>{{$key}}</pre><br />can be imported</p>
                         <table class="table">
                         {{range $markers := $value}}
                             {{range $key2, $value2 := $markers}}
                             <tr>
-                                <th>Detection: <strong>{{$value2}}</strong>%</th>
-                                <td>
+                                <th>
                                     <form action="/import" method="post">
                                         <input type="hidden" name="file" value="{{$key}}" />
                                         <input type="hidden" name="provider" value="{{$key2}}" />
-                                        <button type="submit" class="btn btn-primary btn-block">with {{$key2}} plugin</button>
+                                        <button type="submit" class="btn btn-primary btn-block">{{$value2}}% {{$key2}} plugin</button>
                                     </form>
-                                </td>
+                                </th>
                             </tr>
                             {{end}}
                         {{end}}
