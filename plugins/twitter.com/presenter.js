@@ -21,6 +21,10 @@
         return out;
     }
 
+    function replaceAll(target, search, replacement) {
+        return target.split(search).join(replacement);
+    };
+
     function renderDetail(entry) {
         var out = '';
         switch(entry["table"]) {
@@ -36,13 +40,17 @@
             out += '            <small class="d-block text-muted">{{created-relative}}</small>';
             out += '        </div>';
             out += '        <div class="ml-auto text-muted">';
-            out += '            <a href="" class="icon"><i class="fe fe-eye mr-1"></i> 0</a>';
-            out += '            <a href="" class="icon d-none d-md-inline-block ml-3"><i class="fe fe-heart mr-1"></i> 0</a>';
+            out += '            <a href="" class="icon"><i class="fe fe-repeat mr-1"></i> {{retweets}}</a>';
+            out += '            <a href="" class="icon d-none d-md-inline-block ml-3"><i class="fe fe-heart mr-1"></i> {{likes}}</a>';
             out += '        </div>';
             out += '    </div>';
             out += '</div>';
             var content = JSON.parse(entry["content"]);
             var type = content["content-type"].replace("image/", "");
+            out = replaceAll(out, "{{author}}", content["account"]["accountDisplayName"]);
+            out = replaceAll(out, "{{created-relative}}", content["created"]);
+            out = out.replace("{{retweets}}", content["retweet_count"]);
+            out = out.replace("{{likes}}", content["favorite_count"]);
             out = out.replace("{{id}}", entry["id"]);
             out = out.replace("{{image}}", "data:image/"+type+";base64,"+content["content"]);
             return out;

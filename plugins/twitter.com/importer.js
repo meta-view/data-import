@@ -2,6 +2,7 @@
     console.log("[" + _provider + "] Import payload " + _payloadPath);
     files = listFiles()
     console.log("[" + _provider + "] loading " + files.length + " files");
+    var account;
 
     // Importing files into the database
     for (i in files) {
@@ -12,11 +13,11 @@
     for (i in files) {
         linkFiles(files[i]);
     }
-
     function saveData(file) {
         switch (file) {
             case "account.js":
                 content = StringReplace(getContent(file), "window.YTD.account.part0 =", "");
+                account = JSON.parse(content)[0]["account"];
                 data = {
                     "id": getFileChecksum(file),
                     "table": "accounts",
@@ -131,7 +132,13 @@
                             images = readEntry(query);
                             for (i in images) {
                                 image = images[i];
-                                console.log("image: " + image.id)
+                                var content = JSON.parse(image["content"]);
+                                content["media"] = mediaFile;
+                                content["account"] = account;
+                                content["created"] = created;
+                                content["favorite_count"] = tweet.favorite_count;
+                                content["retweet_count"] = tweet.retweet_count;
+                                saveEntry(content);
                             }
                         }
                     }
