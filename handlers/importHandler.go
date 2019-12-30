@@ -149,7 +149,7 @@ func ImportHandler(plugins map[string]*tools.Plugin) httprouter.Handle {
 		log.Printf("Importing using %s for file %s", provider, file)
 		dest := path.Join(rawDataDirectory, file)
 		handleImport(plugins[provider], dest)
-		http.Redirect(w, r, "/", http.StatusSeeOther)
+		http.Redirect(w, r, fmt.Sprintf("/?provider=%s", provider), http.StatusSeeOther)
 	}
 }
 
