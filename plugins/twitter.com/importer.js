@@ -13,19 +13,78 @@
     for (i in files) {
         linkFiles(files[i]);
     }
+
     function saveData(file) {
         switch (file) {
             case "account.js":
-                content = StringReplace(getContent(file), "window.YTD.account.part0 =", "");
+            content = StringReplace(getContent("profile.js"), "window.YTD.profile.part0 =", "");
+            profile = JSON.parse(content)[0]["profile"];
+            if(profile.avatarMediaUrl) {
+                profileImage = profile.avatarMediaUrl.replace("https://pbs.twimg.com/profile_images/", "").replace("/", "-");
+                if(StringEndsWith(profileImage, "default_profile.png")) {
+                    profile["profileImage"] = "default_profile.png"
+                } else {
+                    profile["profileImage"] = profileImage;
+                }
+            }
+            if(profile.headerMediaUrl) {
+                backgroundImage = profile.headerMediaUrl.replace("https://pbs.twimg.com/profile_banners/", "").replace("/", "-");
+                profile["backgroundImage"] = backgroundImage;
+            }
+            content = StringReplace(getContent(file), "window.YTD.account.part0 =", "");
                 account = JSON.parse(content)[0]["account"];
+                account["profile"] = profile;
                 data = {
                     "id": getFileChecksum(file),
                     "table": "accounts",
                     "name": file,
                     "content-type": "application/json",
-                    "content": JSON.parse(content)
+                    "content": account
                 }
                 saveEntry(data);
+                break;
+            case "direct-message.js":
+                content = StringReplace(getContent(file), "window.YTD.direct_message.part0 = ", "");
+                conversations = JSON.parse(content);
+                for (i in conversations) {
+                    if(conversations[i].dmConversation) {
+                        conversation = conversations[i].dmConversation;
+                        conversationId = conversation.conversationId;
+                        console.log("importing conversation " + conversationId);
+                        for(mi in conversation.messages) {
+                            if(conversation.messages[mi].messageCreate) {
+                                message = conversation.messages[mi].messageCreate;
+                                checksum = getChecksum(JSON.stringify(message));
+                                message["conversationId"] = conversationId;
+                                messageData = {
+                                    "id": checksum,
+                                    "created": message.createdAt,
+                                    "table": "messages",
+                                    "name": "message-" + message.id,
+                                    "content-type": "application/json",
+                                    "content": message
+                                }
+                                saveEntry(messageData);
+                            }
+                        }
+                    }
+                }
+                break;
+            case "like.js":
+                content = StringReplace(getContent(file), "window.YTD.like.part0 = ", "");
+                likes = JSON.parse(content);
+                for (i in likes) {
+                    like = likes[i];
+                    checksum = getChecksum(JSON.stringify(like));
+                    likeData = {
+                        "id": checksum,
+                        "table": "likes",
+                        "name": "like-"+like.tweetId,
+                        "content-type": "application/json",
+                        "content": like
+                    }
+                    saveEntry(likeData);
+                }
                 break;
             case "tweet.js":
                 content = StringReplace(getContent(file), "window.YTD.tweet.part0 = ", "");
@@ -100,6 +159,16 @@
                         "content-type": contentType,
                         "content": getBase64(file)
                     }
+                } else if (StringStartsWith(contentType, "video")) {
+                    name = splitToLastBy(file, '-');
+                    data = {
+                        "id": checksum,
+                        "table": "videos",
+                        "file": file,
+                        "name": name,
+                        "content-type": contentType,
+                        "content": getBase64(file)
+                    }
                 } else {
                     data = {
                         "id": checksum,
@@ -118,6 +187,7 @@
             case "tweet.js":
                 content = StringReplace(getContent(file), "window.YTD.tweet.part0 = ", "");
                 tweets = JSON.parse(content);
+                console.log("linking images to tweets.");
                 for (i in tweets) {
                     tweet = tweets[i];
                     checksum = getChecksum(JSON.stringify(tweet));
@@ -127,7 +197,6 @@
                         for(mi in tweet.extended_entities.media) {
                             mediaFile = tweet.extended_entities.media[mi];
                             filename = mediaFile.media_url.replace("http://pbs.twimg.com/media/", "");
-                            console.log("updating image " + filename + " for tweet " + checksum);
                             query = {"table":"images", "content": {"name": filename}};
                             images = readEntry(query);
                             for (i in images) {
