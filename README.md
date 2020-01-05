@@ -9,14 +9,16 @@ The user should be able to:
 3. Being able to perform various analysis with the saved data.
 4. … let's see :-).
 
+## RUN
 
-## Setup & Run
+You can use the `run-docker.sh` script to run the latest build of this Application within docker.
+You can find a nightly Docker Build on Docker Hub: https://hub.docker.com/r/phaus/meta-view-service
 
-This application is written in Go. So the easiest way of running it is with a simple
+## Build & Run
 
-```
-% go run main.go
-```
+If you want to run from the source, you can do that as well!
+
+This application is written in Go. So the easiest way of running it is with the `run.sh` script.
 
 This should lead to the following log output:
 
@@ -90,4 +92,3 @@ A list of Download URLs for the service that are planed to be supported can be f
 * adding a wizard for step by step import of user data: ❌
 * Creating analysis function (time-based, geographical, structural): ❌
 * … (feel free to leave an idea in the issues)
-
