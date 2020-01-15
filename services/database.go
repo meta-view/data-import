@@ -32,7 +32,6 @@ func init() {
 			log.Printf("created directory %s", folder)
 		}
 	}
-
 }
 
 // CreateDatabase - create a new database struct or opens an existing one.
