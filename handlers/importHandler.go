@@ -71,7 +71,7 @@ func handleUpload(w http.ResponseWriter, r *http.Request, plugins map[string]*to
 			if err != nil {
 				log.Printf("Error: %s\n", err)
 			} else {
-				markers[plugin.Provider.Name] = value
+				markers[plugin.Name] = value
 			}
 		}
 
@@ -154,7 +154,7 @@ func ImportHandler(plugins map[string]*tools.Plugin) httprouter.Handle {
 }
 
 func handleImport(plugin *tools.Plugin, dest string) {
-	log.Printf("importing %s using %s\n", dest, plugin.Provider.Name)
+	log.Printf("importing %s using %s\n", dest, plugin.Name)
 
 	err := plugin.Import(dest)
 	if err != nil {

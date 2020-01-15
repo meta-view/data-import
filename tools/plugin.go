@@ -20,16 +20,18 @@ import (
 
 // Plugin - a basic plugin structur
 type Plugin struct {
-	Provider *Provider
-	Path     string
-	Version  *semver.Version
-	VM       *otto.Otto
-	DB       *services.Database
+	Name            string `json:"name"`
+	Description     string `json:"description"`
+	DownloadRequest string `json:"download_request"`
+	Version         *semver.Version
+	Path            string
+	VM              *otto.Otto
+	DB              *services.Database
 }
 
 // LoadPlugin - loads one plugin
 func LoadPlugin(pluginPath string, db *services.Database) (*Plugin, error) {
-	data, err := ioutil.ReadFile(path.Join(pluginPath, "package.json"))
+	data, err := ioutil.ReadFile(path.Join(pluginPath, "info.json"))
 	if err != nil {
 		return nil, err
 	}
@@ -37,17 +39,19 @@ func LoadPlugin(pluginPath string, db *services.Database) (*Plugin, error) {
 	err = json.Unmarshal(data, &packageInfo)
 	log.Printf("loading %s from %s\n", packageInfo, pluginPath)
 	return &Plugin{
-		Provider: &Provider{Name: packageInfo["name"], DownloadRequest: packageInfo["download_request"]},
-		Path:     pluginPath,
-		Version:  semver.New(packageInfo["version"]),
-		VM:       otto.New(),
-		DB:       db,
+		Name:            packageInfo["name"],
+		Description:     packageInfo["description"],
+		DownloadRequest: packageInfo["download_request"],
+		Path:            pluginPath,
+		Version:         semver.New(packageInfo["version"]),
+		VM:              otto.New(),
+		DB:              db,
 	}, nil
 }
 
 // Detect - returns the percentage if a given payload is of the type of the plugin
 func (plugin *Plugin) Detect(payloadPath string) (float64, error) {
-	log.Printf("Detecting if %s is for [%s]\n", payloadPath, plugin.Provider.Name)
+	log.Printf("Detecting if %s is for [%s]\n", payloadPath, plugin.Name)
 	output := 0.0
 
 	err := LoadPluginExtenstions(plugin.VM)
@@ -85,7 +89,7 @@ func (plugin *Plugin) Detect(payloadPath string) (float64, error) {
 
 // Import - imports the payload into a specific data structure
 func (plugin *Plugin) Import(payloadPath string) error {
-	log.Printf("Importing data of %s for [%s]\n", payloadPath, plugin.Provider.Name)
+	log.Printf("Importing data of %s for [%s]\n", payloadPath, plugin.Name)
 
 	err := LoadPluginExtenstions(plugin.VM)
 	if err != nil {
@@ -123,7 +127,7 @@ func (plugin *Plugin) Import(payloadPath string) error {
 
 // Present - queries and presents a given list of found elements
 func (plugin *Plugin) Present(entry map[string]interface{}, render string) (string, error) {
-	log.Printf("Presenting result id %s for [%s]", entry["id"], plugin.Provider.Name)
+	log.Printf("Presenting result id %s for [%s]", entry["id"], plugin.Name)
 	output := ""
 
 	script, err := ioutil.ReadFile(path.Join(plugin.Path, "presenter.js"))
@@ -151,8 +155,7 @@ func (plugin *Plugin) Present(entry map[string]interface{}, render string) (stri
 }
 
 func (plugin *Plugin) loadFileTools(payloadPath string) error {
-	log.Printf("Installing file tools in path %s for plugin %s", payloadPath, plugin.Provider.Name)
-	plugin.VM.Set("_provider", plugin.Provider.Name)
+	log.Printf("Installing file tools in path %s for plugin %s", payloadPath, plugin.Name)
 
 	err := plugin.VM.Set("readDir", func() []string {
 		return readFiles(payloadPath, "", false)
@@ -224,9 +227,8 @@ func (plugin *Plugin) loadFileTools(payloadPath string) error {
 }
 
 func (plugin *Plugin) loadDBTools() error {
-	log.Printf("Installing DB tools for plugin %s", plugin.Provider.Name)
+	log.Printf("Installing DB tools for plugin %s", plugin.Name)
 	err := plugin.VM.Set("saveEntry", func(data map[string]interface{}) string {
-		data["provider"] = plugin.Provider.Name
 		id, err := plugin.DB.SaveEntry(data)
 		if err != nil {
 			log.Printf("error %s saving data\n", err)
