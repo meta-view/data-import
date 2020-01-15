@@ -1,0 +1,6 @@
+{
+    "name": "default",
+    "description": "Fallback, if nothing else is working",
+    "version": "0.0.1",
+    "download_request": "/"
+}

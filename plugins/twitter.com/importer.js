@@ -1,8 +1,8 @@
 (function(){
-    console.log("[" + _provider + "] Import payload " + _payloadPath);
-    files = listFiles()
-    console.log("[" + _provider + "] loading " + files.length + " files");
+    var provider = "twitter.com";
     var account;
+    files = listFiles()
+    console.log("[" + provider + "] Importing payload " + files.length + " files");
 
     // Importing files into the database
     for (i in files) {
@@ -37,6 +37,7 @@
                 data = {
                     "id": getFileChecksum(file),
                     "table": "accounts",
+                    "provider": provider,
                     "name": file,
                     "content-type": "application/json",
                     "content": account
@@ -60,6 +61,7 @@
                                     "id": checksum,
                                     "created": message.createdAt,
                                     "table": "messages",
+                                    "provider": provider,
                                     "name": "message-" + message.id,
                                     "content-type": "application/json",
                                     "content": message
@@ -79,6 +81,7 @@
                     likeData = {
                         "id": checksum,
                         "table": "likes",
+                        "provider": provider,
                         "name": "like-"+like.tweetId,
                         "content-type": "application/json",
                         "content": like
@@ -98,6 +101,7 @@
                         "id": checksum,
                         "created": created,
                         "table": "posts",
+                        "provider": provider,
                         "name": "tweet-" + tweet.id,
                         "content-type": "application/json",
                         "content": tweet
@@ -111,6 +115,7 @@
                             "id": getChecksum(JSON.stringify(hashTag)),
                             "created": created,
                             "table": "locations",
+                            "provider": provider,
                             "name": "geo-" + tweet.id,
                             "content-type": "application/json",
                             "content": geo
@@ -125,6 +130,7 @@
                             "id": getChecksum(JSON.stringify(hashTag)),
                             "created": created,
                             "table": "tags",
+                            "provider": provider,
                             "name": hashTag.text,
                             "content-type": "application/json",
                             "content": hashTag
@@ -139,6 +145,7 @@
                             "id": getChecksum(JSON.stringify(mention)),
                             "created": created,
                             "table": "mentions",
+                            "provider": provider,
                             "name": mention.screen_name,
                             "content-type": "application/json",
                             "content": mention
@@ -154,6 +161,7 @@
                     data = {
                         "id": checksum,
                         "table": "images",
+                        "provider": provider,
                         "file": file,
                         "name": name,
                         "content-type": contentType,
@@ -164,6 +172,7 @@
                     data = {
                         "id": checksum,
                         "table": "videos",
+                        "provider": provider,
                         "file": file,
                         "name": name,
                         "content-type": contentType,
@@ -173,6 +182,7 @@
                     data = {
                         "id": checksum,
                         "table": "files",
+                        "provider": provider,
                         "name": file,
                         "content-type": contentType,
                         "content": getBase64(file)

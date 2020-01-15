@@ -1,5 +1,6 @@
 {
     "name": "twitter.com",
+    "description": "Connector for Twitter",
     "version": "0.0.1",
     "download_request": "https://twitter.com/settings/your_twitter_data"
 }

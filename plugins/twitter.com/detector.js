@@ -1,9 +1,10 @@
 (function(){
+    var provider = "twitter.com";
     var output = 0.0;
     var markers = ["tweet_media", "account.js", "block.js", "profile.js", "tweet.js", "like.js", "direct-message.js", "README.txt"];
     var part = 100 / markers.length;
 
-    console.log("[" + _provider + "] Checking payload " + _payloadPath);
+    console.log("[" + provider + "] Checking payload " + _payloadPath);
 
     function calcOutput(filename) {
         for (i in markers) {
@@ -18,6 +19,6 @@
     for (i in files) {
         output += calcOutput(files[i]);
     }
-    console.log("[" + _provider + "] calculated values: " + output);
+    console.log("[" + provider + "] calculated values: " + output);
     return output;
 })();
