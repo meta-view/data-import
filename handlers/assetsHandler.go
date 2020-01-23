@@ -2,11 +2,11 @@ package handlers
 
 import (
 	"fmt"
+	"github.com/julienschmidt/httprouter"
 	"log"
+	"meta-view-service/assets"
 	"net/http"
 	"path/filepath"
-	"meta-view-service/assets"
-	"github.com/julienschmidt/httprouter"
 )
 
 // AssetsHandler - handler for the basic index file

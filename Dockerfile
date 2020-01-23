@@ -1,5 +1,5 @@
 FROM golang:alpine3.8
-RUN apk --update add git build-base gcc bash openssh sed icu-dev upx && \
+RUN apk --update add git build-base gcc unzip bash openssh sed icu-dev upx && \
     rm -rf /var/lib/apt/lists/* && \
     rm /var/cache/apk/*
 
