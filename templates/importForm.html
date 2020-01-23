@@ -1,10 +1,10 @@
 {{define "title"}}Meta-View Import{{end}}
 {{define "content"}}
-  <div class="container">
+<div class="container">
     <div class="page-header">
-      <h1 class="page-title">
-        Import Data
-      </h1>
+        <h1 class="page-title">
+            Import Data
+        </h1>
     </div>
     <div tabindex="-1" role="dialog">
         <div class="modal-dialog" role="document">
@@ -14,26 +14,28 @@
                 </div>
                 <div class="modal-body">
                     {{range $key, $value := .}}
-                        <p><pre>{{$key}}</pre><br />can be imported</p>
-                        <table class="table">
+                    <p>
+                        <pre>{{$key}}</pre><br />can be imported
+                    </p>
+                    <table class="table">
                         {{range $markers := $value}}
-                            {{range $key2, $value2 := $markers}}
-                            <tr>
-                                <th>
-                                    <form action="/import" method="post">
-                                        <input type="hidden" name="file" value="{{$key}}" />
-                                        <input type="hidden" name="provider" value="{{$key2}}" />
-                                        <button type="submit" class="btn btn-primary btn-block">{{$value2}}% {{$key2}} plugin</button>
-                                    </form>
-                                </th>
-                            </tr>
-                            {{end}}
+                        {{range $key2, $value2 := $markers}}
+                        <tr>
+                            <th>
+                                <form action="/import" method="post">
+                                    <input type="hidden" name="file" value="{{$key}}" />
+                                    <input type="hidden" name="provider" value="{{$key2}}" />
+                                    <button type="submit" class="btn btn-primary btn-block">{{$value2}}% {{$key2}} plugin</button>
+                                </form>
+                            </th>
+                        </tr>
                         {{end}}
-                        </table>
+                        {{end}}
+                    </table>
                     {{end}}
                 </div>
             </div>
         </div>
     </div>
-  </div>
+</div>
 {{end}}

@@ -1,87 +1,92 @@
 {{define "title"}}Meta-View Import{{end}}
 {{define "content"}}
-  <div class="container">
-    <div class="page-header">
-      <h1 class="page-title">
-        Import Data
-      </h1>
-    </div>
-    <div class="row row-cards">
-      <div class="col-12 col-sm-12 col-lg-12">
-        <div class="card">
-          <div class="card-body p-3">
-            <!-- Standar Form -->
-            <h4>Import a data dump from your computer</h4>
-            <form action="/upload" method="post" enctype="multipart/form-data" id="js-upload-form">
-              <div class="form-inline">
-                <div class="form-group">
-                  <input type="file" name="files[]" id="js-upload-files" multiple>
-                </div>
-                <button type="submit" class="btn btn-sm btn-primary" id="js-upload-submit">Upload files</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-      <div class="col-12 col-sm-12 col-lg-12">
-        <div class="card">
-          <div class="card-body p-3">
-            <!-- Drop Zone -->
-            <h4>Or drag and drop a data dump below</h4>
-            <div class="upload-drop-zone" id="drop-zone">
-              Just drag and drop files here
-            </div>
-
-            <!-- Progress Bar -->
-            <div class="progress">
-              <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
-                <span class="sr-only">0% Complete</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+<div class="container">
+  <div class="page-header">
+    <h1 class="page-title">
+      Import Data
+    </h1>
   </div>
-  <script type="javascript" src="./assets/js/dropzone.js"></script>
-  <script type="javascript">
-    function($) {
-      'use strict';
+  <div class="row row-cards">
+    <div class="col-12 col-sm-12 col-lg-12">
+      <div class="card">
+        <div class="card-body p-3">
+          <!-- Standar Form -->
+          <h4>Import a data dump from your computer</h4>
+          <form action="/upload" method="post" enctype="multipart/form-data" id="js-upload-form">
+            <div class="form-inline">
+              <div class="form-group">
+                <input type="file" name="files[]" id="js-upload-files" multiple>
+              </div>
+              <button type="submit" class="btn btn-sm btn-primary" id="js-upload-submit">Upload files</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <!--
+    <div class="col-12 col-sm-12 col-lg-12">
+      <div class="card">
+        <div class="card-body p-3">
 
-      // UPLOAD CLASS DEFINITION
-      // ======================
+          <h4>Or drag and drop a data dump below</h4>
+          <div class="upload-drop-zone" id="drop-zone">
+            Just drag and drop files here
+          </div>
 
-      var dropZone = document.getElementById('drop-zone');
-      var uploadForm = document.getElementById('js-upload-form');
+          <div class="progress">
+            <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
+              <span class="sr-only">0% Complete</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    -->
+  </div>
+</div>
 
-      var startUpload = function(files) {
-          console.log(files)
-      }
+<!--
+<script type="text/javascript" src="/assets/js/dropzone.js"></script>
+<script type="text/javascript">
+  (function () {
+    "use strict";
 
-      uploadForm.addEventListener('submit', function(e) {
-          var uploadFiles = document.getElementById('js-upload-files').files;
-          e.preventDefault()
+    // UPLOAD CLASS DEFINITION
+    // ======================
 
-          startUpload(uploadFiles)
-      })
+    var dropZone = document.getElementById('drop-zone');
+    var uploadForm = document.getElementById('js-upload-form');
 
-      dropZone.ondrop = function(e) {
-          e.preventDefault();
-          this.className = 'upload-drop-zone';
+    var startUpload = function (files) {
+      for (var i = 0; i < myDropzone.getAcceptedFiles().length; i++) {
+          dropZone.processFile(myDropzone.getAcceptedFiles()[i]);
+        }
+    }
 
-          startUpload(e.dataTransfer.files)
-      }
+    uploadForm.addEventListener('submit', function (e) {
+      var uploadFiles = document.getElementById('js-upload-files').files;
+      e.preventDefault()
 
-      dropZone.ondragover = function() {
-          this.className = 'upload-drop-zone drop';
-          return false;
-      }
+      startUpload(uploadFiles)
+    })
 
-      dropZone.ondragleave = function() {
-          this.className = 'upload-drop-zone';
-          return false;
-      }
+    dropZone.ondrop = function (e) {
+      e.preventDefault();
+      this.className = 'upload-drop-zone';
 
-    }(jQuery);
-  </script>
+      startUpload(e.dataTransfer.files)
+    }
+
+    dropZone.ondragover = function () {
+      this.className = 'upload-drop-zone drop';
+      return false;
+    }
+
+    dropZone.ondragleave = function () {
+      this.className = 'upload-drop-zone';
+      return false;
+    }
+  })();
+</script>
+-->
 {{end}}

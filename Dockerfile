@@ -1,4 +1,4 @@
-FROM golang:alpine3.8
+FROM golang:1.12-alpine3.11
 RUN apk --update add git build-base gcc unzip bash openssh sed icu-dev upx && \
     rm -rf /var/lib/apt/lists/* && \
     rm /var/cache/apk/*
@@ -9,7 +9,7 @@ COPY . /app
 RUN chmod +x update.sh && bash ./update.sh
 RUN GOOS=linux GOARCH=amd64 go build --tags "icu json1 fts5 secure_delete" -o bin/meta-view-service && /usr/bin/upx /app/bin/meta-view-service
 
-FROM alpine:3.8
+FROM alpine:3.11
 RUN mkdir /data
 RUN apk --update add icu-libs && \
     rm -rf /var/lib/apt/lists/* && \
