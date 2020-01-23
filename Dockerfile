@@ -1,11 +1,12 @@
 FROM golang:alpine3.8
-RUN apk --update add git build-base gcc openssh icu-dev upx && \
+RUN apk --update add git build-base gcc bash openssh sed icu-dev upx && \
     rm -rf /var/lib/apt/lists/* && \
     rm /var/cache/apk/*
 
 WORKDIR /app
 COPY . /app
 
+RUN chmod +x update.sh && bash ./update.sh
 RUN GOOS=linux GOARCH=amd64 go build --tags "icu json1 fts5 secure_delete" -o bin/meta-view-service && /usr/bin/upx /app/bin/meta-view-service
 
 FROM alpine:3.8
