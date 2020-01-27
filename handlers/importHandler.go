@@ -70,7 +70,7 @@ func handleUpload(w http.ResponseWriter, r *http.Request, plugins map[string]*to
 			value, err := plugin.Detect(dest)
 			if err != nil {
 				log.Printf("Error: %s\n", err)
-			} else {
+			} else if value > 0 {
 				markers[plugin.Name] = value
 			}
 		}

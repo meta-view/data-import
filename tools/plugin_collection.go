@@ -12,7 +12,7 @@ type PluginCollection struct {
 }
 
 // LoadPlugins - load all plugins of the current system
-func LoadPlugins(pluginFolder string, db *services.Database) (map[string]*Plugin, error) {
+func LoadPlugins(pluginFolder string, db *services.Database, fs *services.FileStorage) (map[string]*Plugin, error) {
 	folders, err := ioutil.ReadDir(pluginFolder)
 	if err != nil {
 		return nil, err
@@ -20,7 +20,7 @@ func LoadPlugins(pluginFolder string, db *services.Database) (map[string]*Plugin
 	plugins := make(map[string]*Plugin)
 	for _, folder := range folders {
 		if folder.IsDir() {
-			plugin, err := LoadPlugin(path.Join(pluginFolder, folder.Name()), db)
+			plugin, err := LoadPlugin(path.Join(pluginFolder, folder.Name()), db, fs)
 			if err == nil {
 				plugins[folder.Name()] = plugin
 			}

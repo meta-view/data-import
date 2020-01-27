@@ -7,6 +7,8 @@ import (
 	"meta-view-service/services"
 	"meta-view-service/tools"
 	"net/http"
+	"os"
+	"path"
 
 	"github.com/julienschmidt/httprouter"
 )
@@ -16,27 +18,38 @@ const (
 )
 
 func main() {
+	if err := run(); err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
+}
 
+func run() error {
 	handlers.LoadTemplates()
-	db, err := services.CreateDatabase()
+
+	fs := services.CreateFileStorage(path.Join("data", "files"))
+
+	db, err := services.CreateDatabase(path.Join("data", "database"))
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	defer db.Close()
 
-	plugins, err := tools.LoadPlugins("plugins", db)
+	plugins, err := tools.LoadPlugins("plugins", db, fs)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
+
 	router := httprouter.New()
 	//router.ServeFiles("/assets/*filepath", http.Dir("assets"))
-	router.GET("/assets/*filepath", handlers.AssetsHandler())
 	router.GET("/", handlers.IndexHandler(plugins, db))
+	router.GET("/assets/*filepath", handlers.AssetsHandler())
+	router.GET("/files/*filepath", handlers.FilesHandler(fs))
 	router.GET("/form", handlers.UploadFormHandler())
 	router.POST("/upload", handlers.UploadHandler(plugins))
 	router.POST("/import", handlers.ImportHandler(plugins))
 
 	log.Printf("Serving Application on port http://localhost:%d", port)
 
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), router))
+	return http.ListenAndServe(fmt.Sprintf(":%d", port), router)
 }

@@ -2,6 +2,7 @@ package tools
 
 import (
 	"log"
+	"meta-view-service/services"
 	"strings"
 
 	"github.com/robertkrimen/otto"
@@ -12,7 +13,7 @@ func LoadPluginExtenstions(vm *otto.Otto) error {
 	log.Println("installing JS Extensions")
 
 	err := vm.Set("getChecksum", func(content string) string {
-		return getSha1Checksum(content)
+		return services.GetSha1Checksum(content)
 	})
 	if err != nil {
 		return err

@@ -1,6 +1,7 @@
 (function(){
     var provider = "twitter.com";
     var account;
+    var owner;
     files = listFiles()
     console.log("[" + provider + "] Importing payload " + files.length + " files");
 
@@ -17,25 +18,33 @@
     function saveData(file) {
         switch (file) {
             case "account.js":
-            content = StringReplace(getContent("profile.js"), "window.YTD.profile.part0 =", "");
-            profile = JSON.parse(content)[0]["profile"];
-            if(profile.avatarMediaUrl) {
-                profileImage = profile.avatarMediaUrl.replace("https://pbs.twimg.com/profile_images/", "").replace("/", "-");
-                if(StringEndsWith(profileImage, "default_profile.png")) {
-                    profile["profileImage"] = "default_profile.png"
-                } else {
-                    profile["profileImage"] = profileImage;
-                }
-            }
-            if(profile.headerMediaUrl) {
-                backgroundImage = profile.headerMediaUrl.replace("https://pbs.twimg.com/profile_banners/", "").replace("/", "-");
-                profile["backgroundImage"] = backgroundImage;
-            }
-            content = StringReplace(getContent(file), "window.YTD.account.part0 =", "");
+                content = StringReplace(getContent(file), "window.YTD.account.part0 =", "");
                 account = JSON.parse(content)[0]["account"];
+
+                content = StringReplace(getContent("profile.js"), "window.YTD.profile.part0 =", "");
+                profile = JSON.parse(content)[0]["profile"];
+                if(profile.avatarMediaUrl) {
+                    profileImage = profile.avatarMediaUrl.replace("https://pbs.twimg.com/profile_images/", "").replace("/", "-");
+                    if(!StringEndsWith(profileImage, "default_profile.png")) {
+                        name = splitToLastBy(profileImage, '-');
+                        imagePath = saveFile("profile_media/" + account["accountId"] + "-" + name)
+                        profile["profileImage"] = imagePath;
+                    } else {
+                        profile["profileImage"] =  _defaultProfile;
+                    }
+                }
+
+                if(profile.headerMediaUrl) {
+                    backgroundImage = profile.headerMediaUrl.replace("https://pbs.twimg.com/profile_banners/", "").replace("/", "-");
+                    imagePath = saveFile("profile_media/" + backgroundImage)
+                    profile["backgroundImage"] = imagePath;
+                }
+
+                owner = getFileChecksum(file);
                 account["profile"] = profile;
                 data = {
                     "id": getFileChecksum(file),
+                    "owner": owner,
                     "table": "accounts",
                     "provider": provider,
                     "name": file,
@@ -57,8 +66,10 @@
                                 message = conversation.messages[mi].messageCreate;
                                 checksum = getChecksum(JSON.stringify(message));
                                 message["conversationId"] = conversationId;
+                                message["account"] = account;
                                 messageData = {
                                     "id": checksum,
+                                    "owner": owner,
                                     "created": message.createdAt,
                                     "table": "messages",
                                     "provider": provider,
@@ -78,8 +89,10 @@
                 for (i in likes) {
                     like = likes[i];
                     checksum = getChecksum(JSON.stringify(like));
+                    like["account"] = account;
                     likeData = {
                         "id": checksum,
+                        "owner": owner,
                         "table": "likes",
                         "provider": provider,
                         "name": "like-"+like.tweetId,
@@ -97,8 +110,10 @@
                     checksum = getChecksum(JSON.stringify(tweet));
                     createdDate = stringToDate(tweet.created_at);
                     created = ISODateString(createdDate);
+                    tweet["account"] = account;
                     tweetData = {
                         "id": checksum,
+                        "owner": owner,
                         "created": created,
                         "table": "posts",
                         "provider": provider,
@@ -113,6 +128,7 @@
                         geo["tweet_name"] = "tweet-" + tweet.id;
                         geoData = {
                             "id": getChecksum(JSON.stringify(hashTag)),
+                            "owner": owner,
                             "created": created,
                             "table": "locations",
                             "provider": provider,
@@ -128,6 +144,7 @@
                         hashTag["tweet_name"] = "tweet-" + tweet.id;
                         hashTagData = {
                             "id": getChecksum(JSON.stringify(hashTag)),
+                            "owner": owner,
                             "created": created,
                             "table": "tags",
                             "provider": provider,
@@ -143,6 +160,7 @@
                         mention["tweet_name"] = "tweet-" + tweet.id;
                         mentionData = {
                             "id": getChecksum(JSON.stringify(mention)),
+                            "owner": owner,
                             "created": created,
                             "table": "mentions",
                             "provider": provider,
@@ -160,32 +178,35 @@
                     name = splitToLastBy(file, '-');
                     data = {
                         "id": checksum,
+                        "owner": owner,
                         "table": "images",
                         "provider": provider,
                         "file": file,
                         "name": name,
                         "content-type": contentType,
-                        "content": getBase64(file)
+                        "filePath": saveFile(file)
                     }
                 } else if (StringStartsWith(contentType, "video")) {
                     name = splitToLastBy(file, '-');
                     data = {
                         "id": checksum,
+                        "owner": owner,
                         "table": "videos",
                         "provider": provider,
                         "file": file,
                         "name": name,
                         "content-type": contentType,
-                        "content": getBase64(file)
+                        "filePath": saveFile(file)
                     }
                 } else {
                     data = {
                         "id": checksum,
+                        "owner": owner,
                         "table": "files",
                         "provider": provider,
                         "name": file,
                         "content-type": contentType,
-                        "content": getBase64(file)
+                        "filePath": saveFile(file)
                     }
                 }
                 saveEntry(data);
