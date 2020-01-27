@@ -54,6 +54,10 @@ func (db *Database) SaveEntry(data map[string]interface{}) (string, error) {
 		data["provider"] = "N/A"
 	}
 
+	if data["owner"] == nil {
+		data["owner"] = "N/A"
+	}
+
 	date := time.Now().Format(time.RFC3339)
 	if data["created"] == nil {
 		data["created"] = date
@@ -74,7 +78,7 @@ func (db *Database) insertOrUpdateEntry(data map[string]interface{}) (string, er
 		return "", err
 	}
 
-	sqlStmt := fmt.Sprintf("INSERT INTO %s(id, provider, imported, created, updated, content) VALUES (?, ?, ?, ?, ?, json(?)) ON CONFLICT(id) DO UPDATE SET provider=?, imported=?, created=?, updated=?, content=json(?) WHERE id = ?;", data["table"])
+	sqlStmt := fmt.Sprintf("INSERT INTO %s(id, provider, owner, imported, created, updated, content) VALUES (?, ?, ?, ?, ?, ?, json(?)) ON CONFLICT(id) DO UPDATE SET provider=?, owner=?, imported=?, created=?, updated=?, content=json(?) WHERE id = ?;", data["table"])
 
 	stmt, err := tx.Prepare(sqlStmt)
 	if err != nil {
@@ -89,11 +93,13 @@ func (db *Database) insertOrUpdateEntry(data map[string]interface{}) (string, er
 	_, err = stmt.Exec(
 		id,
 		data["provider"],
+		data["owner"],
 		data["imported"],
 		data["created"],
 		data["updated"],
 		content,
 		data["provider"],
+		data["owner"],
 		data["imported"],
 		data["created"],
 		data["updated"],
@@ -117,7 +123,7 @@ func (db *Database) checkTable(table string) error {
 	var sqlStmt string
 	err = stmt.QueryRow(table).Scan(&name)
 	if err != nil && err == sql.ErrNoRows {
-		sqlStmt = fmt.Sprintf("CREATE TABLE %s (id TEXT not null primary key, provider TEXT, imported TEXT, created TEXT, updated TEXT, content TEXT);", table)
+		sqlStmt = fmt.Sprintf("CREATE TABLE %s (id TEXT not null primary key, owner TEXT, provider TEXT, imported TEXT, created TEXT, updated TEXT, content TEXT);", table)
 		_, err = db.DB.Exec(sqlStmt)
 		if err != nil {
 			return err
@@ -165,7 +171,7 @@ func (db *Database) queryTable(table string, query map[string]interface{}) (map[
 	contentQuery := query["content"].(map[string]interface{})
 	cl := len(contentQuery)
 	output := make(map[string]interface{})
-	queryStmt := fmt.Sprintf("SELECT id, provider, imported, created, updated, content %s FROM %s ", contentSelect, table)
+	queryStmt := fmt.Sprintf("SELECT id, provider, owner, imported, created, updated, content %s FROM %s ", contentSelect, table)
 	if len(query) > 3 {
 		queryStmt += " WHERE "
 		hasWhere = true
@@ -202,8 +208,8 @@ func (db *Database) queryTable(table string, query map[string]interface{}) (map[
 	log.Printf("mapping results of %s to elements", query)
 	for rows.Next() {
 		data := make(map[string]interface{})
-		var id, provider, imported, created, updated, content string
-		err = rows.Scan(&id, &provider, &imported, &created, &updated, &content)
+		var id, provider, owner, imported, created, updated, content string
+		err = rows.Scan(&id, &provider, &owner, &imported, &created, &updated, &content)
 		if err == nil {
 			data["id"] = id
 			data["table"] = table
@@ -211,6 +217,7 @@ func (db *Database) queryTable(table string, query map[string]interface{}) (map[
 			data["created"] = created
 			data["updated"] = updated
 			data["provider"] = provider
+			data["owner"] = owner
 			data["content"] = content
 			log.Printf("Reading entry %s for %s\n", data["id"], data["provider"])
 			output[id] = data

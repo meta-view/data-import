@@ -20,5 +20,5 @@
         output += calcOutput(files[i]);
     }
     console.log("[" + provider + "] calculated values: " + output);
-    return output;
+    return output > 100 ? 100 : output;
 })();

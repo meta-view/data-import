@@ -62,7 +62,8 @@ func (fs *FileStorage) SaveFile(file string) (string, error) {
 
 	dstFolder := path.Join(fs.Root, contentType)
 	checkFolder(dstFolder)
-	dst := path.Join(dstFolder, fmt.Sprintf("%s%s", checksum, path.Ext(file)))
+	dstFilename := fmt.Sprintf("%s%s", checksum, path.Ext(file))
+	dst := path.Join(dstFolder, dstFilename)
 
 	destination, err := os.Create(dst)
 	if err != nil {
@@ -72,16 +73,30 @@ func (fs *FileStorage) SaveFile(file string) (string, error) {
 
 	nBytes, err := io.Copy(destination, source)
 	log.Printf("%d bytes written to %s", nBytes, dst)
-	return dst, nil
+	return fmt.Sprintf("%s/%s", contentType, dstFilename), nil
 }
 
 // DeleteFile - delete a file
-func (fs *FileStorage) DeleteFile(path string) error {
+func (fs *FileStorage) DeleteFile(file string) error {
+	path := path.Join(fs.Root, file)
 	var err = os.Remove(path)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+// ReadFile - reads the content of a file
+func (fs *FileStorage) ReadFile(file string) ([]byte, error) {
+	path := path.Join(fs.Root, file)
+	log.Printf("loading file %s", path)
+	return ioutil.ReadFile(path)
+}
+
+// GetContentType - reads the content of a file
+func (fs *FileStorage) GetContentType(file string) (string, error) {
+	path := path.Join(fs.Root, file)
+	return GetFileContentType(path)
 }
 
 /*

@@ -21,10 +21,11 @@ type Plugin struct {
 	Path            string
 	VM              *otto.Otto
 	DB              *services.Database
+	FS              *services.FileStorage
 }
 
 // LoadPlugin - loads one plugin
-func LoadPlugin(pluginPath string, db *services.Database) (*Plugin, error) {
+func LoadPlugin(pluginPath string, db *services.Database, fs *services.FileStorage) (*Plugin, error) {
 	data, err := ioutil.ReadFile(path.Join(pluginPath, "info.json"))
 	if err != nil {
 		return nil, err
@@ -40,6 +41,7 @@ func LoadPlugin(pluginPath string, db *services.Database) (*Plugin, error) {
 		Version:         semver.New(packageInfo["version"]),
 		VM:              otto.New(),
 		DB:              db,
+		FS:              fs,
 	}, nil
 }
 
@@ -54,6 +56,15 @@ func (plugin *Plugin) Detect(payloadPath string) (float64, error) {
 	}
 
 	err = plugin.loadFileTools(payloadPath)
+	if err != nil {
+		return output, err
+	}
+
+	defaultProfile, err := plugin.FS.SaveFile(path.Join("static", "images", "default_profile.png"))
+	if err != nil {
+		return output, err
+	}
+	err = plugin.VM.Set("_defaultProfile", defaultProfile)
 	if err != nil {
 		return output, err
 	}
@@ -160,6 +171,19 @@ func (plugin *Plugin) loadFileTools(payloadPath string) error {
 
 	err = plugin.VM.Set("listFiles", func() []string {
 		return readFiles(payloadPath, "", true)
+	})
+	if err != nil {
+		return err
+	}
+
+	err = plugin.VM.Set("saveFile", func(file string) string {
+		path := path.Join(payloadPath, file)
+		filePath, err := plugin.FS.SaveFile(path)
+		if err != nil {
+			log.Printf("error saving file %s\n", path)
+			return ""
+		}
+		return filePath
 	})
 	if err != nil {
 		return err
