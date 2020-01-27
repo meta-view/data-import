@@ -7,6 +7,7 @@ import (
 	"meta-view-service/services"
 	"meta-view-service/tools"
 	"net/http"
+	"path"
 
 	"github.com/julienschmidt/httprouter"
 )
@@ -18,7 +19,7 @@ const (
 func main() {
 
 	handlers.LoadTemplates()
-	db, err := services.CreateDatabase()
+	db, err := services.CreateDatabase(path.Join("data", "database"))
 	if err != nil {
 		log.Fatal(err)
 	}

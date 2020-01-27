@@ -1,17 +1,11 @@
 package tools
 
 import (
-	"crypto/sha1"
-	"encoding/base64"
-	"encoding/hex"
 	"encoding/json"
-	"io"
 	"io/ioutil"
 	"log"
 	"math"
 	"meta-view-service/services"
-	"net/http"
-	"os"
 	"path"
 
 	"github.com/coreos/go-semver/semver"
@@ -173,7 +167,7 @@ func (plugin *Plugin) loadFileTools(payloadPath string) error {
 
 	err = plugin.VM.Set("getContent", func(file string) string {
 		path := path.Join(payloadPath, file)
-		content, err := getFileContent(path)
+		content, err := services.GetFileContent(path)
 		if err != nil {
 			log.Printf("error %s reading content of %s\n", err, path)
 			return ""
@@ -186,7 +180,7 @@ func (plugin *Plugin) loadFileTools(payloadPath string) error {
 
 	err = plugin.VM.Set("getBase64", func(file string) string {
 		path := path.Join(payloadPath, file)
-		content, err := getFileBase64(path)
+		content, err := services.GetFileBase64(path)
 		if err != nil {
 			log.Printf("error %s reading content of %s\n", err, path)
 			return ""
@@ -199,7 +193,7 @@ func (plugin *Plugin) loadFileTools(payloadPath string) error {
 
 	err = plugin.VM.Set("getContentType", func(file string) string {
 		path := path.Join(payloadPath, file)
-		contentType, err := getFileContentType(path)
+		contentType, err := services.GetFileContentType(path)
 		if err != nil {
 			log.Printf("error %s reading contentType of %s\n", err, path)
 			return ""
@@ -212,7 +206,7 @@ func (plugin *Plugin) loadFileTools(payloadPath string) error {
 
 	err = plugin.VM.Set("getFileChecksum", func(file string) string {
 		path := path.Join(payloadPath, file)
-		checksum, err := getSha1ChecksumOfFile(path)
+		checksum, err := services.GetSha1ChecksumOfFile(path)
 		if err != nil {
 			log.Printf("error %s calculating sha1 checksum of %s\n", err, path)
 			return ""
@@ -277,68 +271,4 @@ func readFiles(parent string, child string, filesOnly bool) []string {
 		}
 	}
 	return files
-}
-
-func getFileContent(file string) (string, error) {
-	content, err := ioutil.ReadFile(file)
-	if err != nil {
-		return "", err
-	}
-
-	output := string([]byte(content))
-	return output, nil
-}
-
-func getFileBase64(file string) (string, error) {
-	content, err := ioutil.ReadFile(file)
-	if err != nil {
-		return "", err
-	}
-
-	encoded := base64.StdEncoding.EncodeToString([]byte(content))
-	return encoded, nil
-}
-
-func getFileContentType(file string) (string, error) {
-
-	f, err := os.Open(file)
-	if err != nil {
-		log.Printf("error opening %s\n", file)
-		return "", err
-	}
-	defer f.Close()
-
-	buffer := make([]byte, 512)
-
-	_, err = f.Read(buffer)
-	if err != nil {
-		return "", err
-	}
-
-	contentType := http.DetectContentType(buffer)
-
-	return contentType, nil
-}
-
-func getSha1ChecksumOfFile(file string) (string, error) {
-
-	f, err := os.Open(file)
-	if err != nil {
-		log.Printf("error opening %s\n", file)
-		return "", err
-	}
-	defer f.Close()
-
-	h := sha1.New()
-	if _, err := io.Copy(h, f); err != nil {
-		return "", err
-	}
-	return hex.EncodeToString(h.Sum(nil)), nil
-}
-
-func getSha1Checksum(content string) string {
-	bv := []byte(content)
-	h := sha1.New()
-	h.Write(bv)
-	return hex.EncodeToString(h.Sum(nil))
 }

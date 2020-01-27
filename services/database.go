@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"log"
-	"os"
 	"path"
 
 	"github.com/google/uuid"
@@ -16,32 +15,21 @@ import (
 	"gopkg.in/square/go-jose.v2/json"
 )
 
-var dbDataDirectory = path.Join("data", "database")
-
 // Database - basic struct for the database
 type Database struct {
 	Path string
 	DB   *sql.DB
 }
 
-func init() {
-	folders := []string{dbDataDirectory}
-	for _, folder := range folders {
-		if _, err := os.Stat(folder); os.IsNotExist(err) {
-			os.MkdirAll(folder, 0700)
-			log.Printf("created directory %s", folder)
-		}
-	}
-}
-
 // CreateDatabase - create a new database struct or opens an existing one.
-func CreateDatabase() (*Database, error) {
-	db, err := sql.Open("sqlite3", path.Join(dbDataDirectory, "meta-view.db"))
+func CreateDatabase(folder string) (*Database, error) {
+	checkFolder(folder)
+	db, err := sql.Open("sqlite3", path.Join(folder, "meta-view.db"))
 	if err != nil {
 		return nil, err
 	}
 	return &Database{
-		Path: dbDataDirectory,
+		Path: folder,
 		DB:   db,
 	}, nil
 }
