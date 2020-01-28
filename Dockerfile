@@ -19,4 +19,6 @@ WORKDIR /
 ENTRYPOINT ["/app/meta-view-service"]
 ADD plugins /plugins
 ADD templates /templates
+ADD static /static
+
 COPY --from=0 /app/bin/meta-view-service /app/meta-view-service
