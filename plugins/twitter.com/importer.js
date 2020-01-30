@@ -5,6 +5,18 @@
     files = listFiles()
     console.log("[" + provider + "] Importing payload " + files.length + " files");
 
+    // Set provider
+    data = {
+        "id": getChecksum(provider),
+        "owner": "system",
+        "table": "providers",
+        "provider": provider,
+        "name": provider,
+        "content-type": "plain/text",
+        "content": provider
+    }
+    saveEntry(data);
+
     // Importing files into the database
     for (i in files) {
         saveData(files[i]);

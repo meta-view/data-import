@@ -5,10 +5,36 @@
     <h1 class="page-title">
       Data Listing
     </h1>
+    <div class="page-subtitle">1 - {{ .shown}} of {{ .count}} {{ .table}}</div>
+    <form class="page-options d-flex" action="" method="GET">
+      <div class="form-group">
+        <label class="form-label">Provider</label>
+        <select class="form-control custom-select w-auto" name="provider">
+          <option {{ if not .provider }} selected="selected" {{ end }} value="">all</option>
+          <!-- static for now ;-) -->
+          <option {{ if eq .provider "twitter.com" }} selected="selected" {{ end }} value="twitter.com">twitter.com</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Table</label>
+        <div class="input-group">
+          <select class="form-control custom-select w-auto" name="table">
+            <!-- static for now ;-) -->
+            <option {{ if eq .table "posts" }} selected="selected" {{ end }} value="posts">posts</option>
+            <option {{ if eq .table "messages" }} selected="selected" {{ end }} value="messages">messages</option>
+            <option {{ if eq .table "images" }} selected="selected" {{ end }} value="images">images</option>
+            <option {{ if eq .table "locations" }} selected="selected" {{ end }} value="locations">locations</option>
+          </select>
+          <div class="input-icon ml-2">
+            <button type="submit" class="btn btn-primary">Show</button>
+          </div>
+        </div>
+      </div>
+    </form>
   </div>
   <div class="row row-cards">
-    {{range .}}
-    <div class="col-sm-6 col-lg-3">
+    {{range .elements}}
+    <div class="col-sm-6 col-lg-4">
       {{htmlSafe .}}
     </div>
     {{end}}

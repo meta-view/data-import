@@ -15,6 +15,9 @@ import (
 	"gopkg.in/square/go-jose.v2/json"
 )
 
+// MaxValues - maximum values of one result page
+var MaxValues int = 48
+
 // Database - basic struct for the database
 type Database struct {
 	Path string
@@ -155,12 +158,48 @@ func (db *Database) ReadEntries(query map[string]interface{}) (map[string]interf
 		return output, errors.New("'table' need to be set for now")
 	}
 	if query["limit"] == nil {
-		query["limit"] = "100"
+		query["limit"] = fmt.Sprintf("%d", MaxValues)
 	}
 	if query["content"] == nil {
 		query["content"] = make(map[string]interface{})
 	}
 	return db.queryTable(fmt.Sprintf("%v", query["table"]), query)
+}
+
+// CountEntries - counts entries of a given query
+func (db *Database) CountEntries(query map[string]interface{}) (int, error) {
+	out := 0
+	i := 0
+	l := len(query) - 1
+	if query["table"] == nil {
+		return out, errors.New("'table' need to be set for now")
+	}
+	queryStmt := fmt.Sprintf("SELECT count(id) as count FROM %s ", query["table"].(string))
+	if len(query) > 1 {
+		queryStmt += " WHERE "
+	}
+	for k, v := range query {
+		if k != "table" {
+			i++
+			queryStmt += fmt.Sprintf(" %s='%s'", k, v)
+			if i < l {
+				queryStmt += " AND "
+			}
+		}
+	}
+	rows, err := db.DB.Query(queryStmt)
+	if err != nil {
+		return out, err
+	}
+	for rows.Next() {
+		var count int
+		err = rows.Scan(&count)
+		if err == nil {
+			out = count
+		}
+	}
+	rows.Close()
+	return out, nil
 }
 
 func (db *Database) queryTable(table string, query map[string]interface{}) (map[string]interface{}, error) {

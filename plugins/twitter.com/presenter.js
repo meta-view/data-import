@@ -40,8 +40,8 @@
             out += '            <small class="d-block text-muted">{{created-relative}}</small>';
             out += '        </div>';
             out += '        <div class="ml-auto text-muted">';
-            out += '            <a href="" class="icon"><i class="fe fe-repeat mr-1"></i> {{retweets}}</a>';
-            out += '            <a href="" class="icon d-none d-md-inline-block ml-3"><i class="fe fe-heart mr-1"></i> {{likes}}</a>';
+            out += '            <span class="icon"><i class="fe fe-repeat mr-1"></i> {{retweets}}</span>';
+            out += '            <spanclass="icon d-none d-md-inline-block ml-3"><i class="fe fe-heart mr-1"></i> {{likes}}</span>';
             out += '        </div>';
             out += '    </div>';
             out += '</div>';
@@ -66,8 +66,8 @@
             out += '                <small class="d-block text-muted">{{created-relative}}</small>';
             out += '            </div>';
             out += '        <div class="ml-auto text-muted">';
-            out += '            <a href="" class="icon"><i class="fe fe-repeat mr-1"></i> {{retweets}}</a>';
-            out += '            <a href="" class="icon d-none d-md-inline-block ml-3"><i class="fe fe-heart mr-1"></i> {{likes}}</a>';
+            out += '            <span class="icon"><i class="fe fe-repeat mr-1"></i> {{retweets}}</span>';
+            out += '            <span class="icon d-none d-md-inline-block ml-3"><i class="fe fe-heart mr-1"></i> {{likes}}</span>';
             out += '        </div>';
             out += '       </div>';
             out += '    </div>';
@@ -92,8 +92,8 @@
             out += '                <small class="d-block text-muted">{{created-relative}}</small>';
             out += '            </div>';
             out += '        <div class="ml-auto text-muted">';
-            out += '            <a href="" class="icon"><i class="fe fe-repeat mr-1"></i> {{retweets}}</a>';
-            out += '            <a href="" class="icon d-none d-md-inline-block ml-3"><i class="fe fe-heart mr-1"></i> {{likes}}</a>';
+            out += '            <span class="icon"><i class="fe fe-repeat mr-1"></i> {{retweets}}</span>';
+            out += '            <span class="icon d-none d-md-inline-block ml-3"><i class="fe fe-heart mr-1"></i> {{likes}}</span>';
             out += '        </div>';
             out += '       </div>';
             out += '    </div>';

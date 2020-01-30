@@ -18,9 +18,36 @@ func IndexHandler(plugins map[string]*tools.Plugin, db *services.Database) httpr
 		for k, v := range queryValues {
 			query[k] = strings.Join(v, "")
 		}
+
+		data := make(map[string]interface{})
+		if query["provider"] == nil {
+			data["provider"] = ""
+		} else {
+			data["provider"] = query["provider"]
+		}
+
+		if query["provider"] == "" {
+			delete(query, "provider")
+		}
+
 		if query["table"] == nil {
 			query["table"] = "images"
 		}
+		data["table"] = query["table"]
+
+		count, err := db.CountEntries(query)
+		if err != nil {
+			log.Println(err)
+		}
+		log.Printf("query %s has %d elements\n", query, count)
+		data["count"] = count
+
+		shown := services.MaxValues
+		if count < shown {
+			shown = count
+		}
+		data["shown"] = shown
+
 		log.Printf("render results for %s\n", query)
 		results, err := db.ReadEntries(query)
 		if err != nil {
@@ -40,7 +67,8 @@ func IndexHandler(plugins map[string]*tools.Plugin, db *services.Database) httpr
 				log.Println(err)
 			}
 		}
-		renderTemplate(w, "index.html", elements)
+		data["elements"] = elements
+		renderTemplate(w, "index.html", data)
 	}
 }
 
