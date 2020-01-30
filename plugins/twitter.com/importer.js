@@ -107,6 +107,9 @@
                 tweets = JSON.parse(content);
                 for (i in tweets) {
                     tweet = tweets[i];
+                    if (tweet["tweet"] !== undefined) {
+                        tweet = tweet["tweet"];
+                    }
                     checksum = getChecksum(JSON.stringify(tweet));
                     createdDate = stringToDate(tweet.created_at);
                     created = ISODateString(createdDate);
