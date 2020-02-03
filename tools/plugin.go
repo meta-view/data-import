@@ -17,6 +17,7 @@ type Plugin struct {
 	Name            string `json:"name"`
 	Description     string `json:"description"`
 	DownloadRequest string `json:"download_request"`
+	URLWhitelist    []string
 	Version         *semver.Version
 	Path            string
 	VM              *otto.Otto
@@ -30,19 +31,31 @@ func LoadPlugin(pluginPath string, db *services.Database, fs *services.FileStora
 	if err != nil {
 		return nil, err
 	}
-	var packageInfo map[string]string
+	var packageInfo map[string]interface{}
 	err = json.Unmarshal(data, &packageInfo)
 	log.Printf("loading %s from %s\n", packageInfo, pluginPath)
 	return &Plugin{
-		Name:            packageInfo["name"],
-		Description:     packageInfo["description"],
-		DownloadRequest: packageInfo["download_request"],
+		Name:            packageInfo["name"].(string),
+		Description:     packageInfo["description"].(string),
+		DownloadRequest: packageInfo["download_request"].(string),
+		URLWhitelist:    parseList(packageInfo["url_whitelist"]),
 		Path:            pluginPath,
-		Version:         semver.New(packageInfo["version"]),
+		Version:         semver.New(packageInfo["version"].(string)),
 		VM:              otto.New(),
 		DB:              db,
 		FS:              fs,
 	}, nil
+}
+
+func parseList(list interface{}) []string {
+	elements := make([]string, 0)
+	vals, ok := list.([]interface{})
+	if ok {
+		for _, val := range vals {
+			elements = append(elements, val.(string))
+		}
+	}
+	return elements
 }
 
 // Detect - returns the percentage if a given payload is of the type of the plugin

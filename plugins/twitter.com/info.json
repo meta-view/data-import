@@ -1,6 +1,10 @@
 {
     "name": "twitter.com",
     "description": "Connector for Twitter",
-    "version": "0.0.1",
-    "download_request": "https://twitter.com/settings/your_twitter_data"
+    "version": "0.0.3",
+    "download_request": "https://twitter.com/settings/your_twitter_data",
+    "url_whitelist": [
+        "https://api.twitter.com",
+        "https://twitter.com"
+    ]
 }
