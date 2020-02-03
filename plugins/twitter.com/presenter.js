@@ -47,13 +47,15 @@
             out += '</div>';
             var content = JSON.parse(entry["content"]);
             var type = content["content-type"].replace("image/", "");
-            out = replaceAll(out, "{{author}}", content["account"]["accountDisplayName"]);
+            if(content["account"] !== undefined){
+                out = replaceAll(out, "{{author}}", content["account"]["accountDisplayName"]);
+                out = out.replace("{{avatar-image}}", "url(/files/" + content["account"]["profile"]["profileImage"] + ")");
+            }
             out = replaceAll(out, "{{created-relative}}", content["created"]);
             out = out.replace("{{retweets}}", content["retweet_count"]);
             out = out.replace("{{likes}}", content["favorite_count"]);
             out = out.replace("{{id}}", entry["id"]);
             out = out.replace("{{image}}", "/files/"+content["filePath"]);
-            out = out.replace("{{avatar-image}}", "url(/files/" + content["account"]["profile"]["profileImage"] + ")");
             return out;
         case "posts":
             out += '<div class="card">';
@@ -75,11 +77,13 @@
             var data = JSON.parse(entry["content"]);
             var content = data["content"]
             out = out.replace("{{post-content}}", content["full_text"]);
-            out = replaceAll(out, "{{author}}", content["account"]["accountDisplayName"]);
+            if(content["account"] !== undefined){
+                out = replaceAll(out, "{{author}}", content["account"]["accountDisplayName"]);
+                out = out.replace("{{avatar-image}}", "url(/files/" + content["account"]["profile"]["profileImage"] + ")");
+            }
             out = replaceAll(out, "{{created-relative}}", data["created"]);
             out = out.replace("{{retweets}}", content["retweet_count"]);
             out = out.replace("{{likes}}", content["favorite_count"]);
-            out = out.replace("{{avatar-image}}", "url(/files/" + content["account"]["profile"]["profileImage"] + ")");
             return out;
         default:
             out += '<div class="card">';
@@ -101,11 +105,13 @@
             var data = JSON.parse(entry["content"]);
             var content = data["content"]
             out = out.replace("{{post-content}}", content["full_text"]);
-            out = replaceAll(out, "{{author}}", content["account"]["accountDisplayName"]);
+            if(content["account"] !== undefined){
+                out = replaceAll(out, "{{author}}", content["account"]["accountDisplayName"]);
+                out = out.replace("{{avatar-image}}", "url(/files/" + content["account"]["profile"]["profileImage"] + ")");
+            }
             out = replaceAll(out, "{{created-relative}}", data["created"]);
             out = out.replace("{{retweets}}", content["retweet_count"]);
             out = out.replace("{{likes}}", content["favorite_count"]);
-            out = out.replace("{{avatar-image}}", "url(/files/" + content["account"]["profile"]["profileImage"] + ")");
             return out;
         }
         return out;

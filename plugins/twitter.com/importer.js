@@ -236,31 +236,38 @@
                 console.log("linking images to tweets.");
                 for (i in tweets) {
                     tweet = tweets[i];
-                    checksum = getChecksum(JSON.stringify(tweet));
-                    createdDate = stringToDate(tweet.created_at);
-                    created = ISODateString(createdDate);
-                    if(tweet.extended_entities && tweet.extended_entities.media) {
-                        for(mi in tweet.extended_entities.media) {
-                            mediaFile = tweet.extended_entities.media[mi];
-                            filename = mediaFile.media_url.replace("http://pbs.twimg.com/media/", "");
-                            query = {"table":"images", "content": {"name": filename}};
-                            images = readEntry(query);
-                            for (i in images) {
-                                image = images[i];
-                                var content = JSON.parse(image["content"]);
-                                content["media"] = mediaFile;
-                                content["account"] = account;
-                                content["created"] = created;
-                                content["favorite_count"] = tweet.favorite_count;
-                                content["retweet_count"] = tweet.retweet_count;
-                                saveEntry(content);
-                            }
-                        }
+                    if(tweet.entities && tweet.entities.media) {
+                        linkMedia(tweet.entities.media, tweet, account);
+                    } else if(tweet.extended_entities && tweet.extended_entities.media) {
+                        linkMedia(tweet.extended_entities.media, tweet, account);
                     }
                 }
             break;
         }
     }
+
+    function linkMedia(media, tweet, account) {
+        checksum = getChecksum(JSON.stringify(tweet));
+        createdDate = stringToDate(tweet.created_at);
+        created = ISODateString(createdDate);
+        for(mi in media) {
+            mediaFile = tweet.extended_entities.media[mi];
+            filename = mediaFile.media_url.replace("http://pbs.twimg.com/media/", "");
+            query = {"table":"images", "content": {"name": filename}};
+            images = readEntry(query);
+            for (i in images) {
+                image = images[i];
+                var content = JSON.parse(image["content"]);
+                content["media"] = mediaFile;
+                content["account"] = account;
+                content["created"] = created;
+                content["favorite_count"] = tweet.favorite_count;
+                content["retweet_count"] = tweet.retweet_count;
+                saveEntry(content);
+            }
+        }
+    }
+
     function splitToLastBy(element, divider) {
         parts = element.split(divider);
         return parts[parts.length - 1];

@@ -160,6 +160,12 @@ func (db *Database) ReadEntries(query map[string]interface{}) (map[string]interf
 	if query["limit"] == nil {
 		query["limit"] = fmt.Sprintf("%d", MaxValues)
 	}
+	if query["order_by"] == nil {
+		query["order_by"] = "created"
+	}
+	if query["order"] == nil {
+		query["order"] = "desc"
+	}
 	if query["content"] == nil {
 		query["content"] = make(map[string]interface{})
 	}
@@ -204,19 +210,21 @@ func (db *Database) CountEntries(query map[string]interface{}) (int, error) {
 
 func (db *Database) queryTable(table string, query map[string]interface{}) (map[string]interface{}, error) {
 	i := 0
-	l := len(query) - 3
+	l := len(query) - 5
 	hasWhere := false
 	contentSelect := ""
 	contentQuery := query["content"].(map[string]interface{})
 	cl := len(contentQuery)
 	output := make(map[string]interface{})
-	queryStmt := fmt.Sprintf("SELECT id, provider, owner, imported, created, updated, content %s FROM %s ", contentSelect, table)
-	if len(query) > 3 {
+	queryStmt := fmt.Sprintf("SELECT id, provider, owner, imported, created, updated, content %s FROM %s",
+		contentSelect,
+		table)
+	if len(query) > 5 {
 		queryStmt += " WHERE "
 		hasWhere = true
 	}
 	for k, v := range query {
-		if k != "table" && k != "limit" && k != "content" {
+		if k != "table" && k != "limit" && k != "content" && k != "order_by" && k != "order" {
 			i++
 			queryStmt += fmt.Sprintf(" %s='%s'", k, v)
 			if i < l {
@@ -237,6 +245,7 @@ func (db *Database) queryTable(table string, query map[string]interface{}) (map[
 			}
 		}
 	}
+	queryStmt += fmt.Sprintf(" ORDER BY %s %s", query["order_by"].(string), query["order"].(string))
 	queryStmt += fmt.Sprintf(" LIMIT %s;", query["limit"])
 	log.Printf("query: %s\n", queryStmt)
 	rows, err := db.DB.Query(queryStmt)
