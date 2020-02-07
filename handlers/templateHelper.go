@@ -12,6 +12,7 @@ import (
 
 var templates map[string]*template.Template
 var bufpool *bpool.BufferPool
+var versionString string
 
 // TemplateConfig - the config of the template
 type TemplateConfig struct {
@@ -29,8 +30,9 @@ func loadConfiguration() {
 }
 
 // LoadTemplates - initially loads all templates.
-func LoadTemplates() {
+func LoadTemplates(VersionString string) {
 	loadConfiguration()
+	versionString = VersionString
 	if templates == nil {
 		templates = make(map[string]*template.Template)
 	}
@@ -71,7 +73,8 @@ func LoadTemplates() {
 	log.Println("buffer allocation successful")
 }
 
-func renderTemplate(w http.ResponseWriter, name string, data interface{}) {
+func renderTemplate(w http.ResponseWriter, name string, data map[string]interface{}) {
+	data["versionString"] = versionString
 	tmpl, ok := templates[name]
 	if !ok {
 		http.Error(w, fmt.Sprintf("The template %s does not exist.", name),

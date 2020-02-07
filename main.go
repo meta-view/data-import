@@ -13,6 +13,9 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
+// VersionString - the version of the application
+var VersionString string
+
 const (
 	port = 9000
 )
@@ -25,7 +28,7 @@ func main() {
 }
 
 func run() error {
-	handlers.LoadTemplates()
+	handlers.LoadTemplates(VersionString)
 
 	fs := services.CreateFileStorage(path.Join("data", "files"))
 
@@ -41,6 +44,10 @@ func run() error {
 	}
 
 	router := httprouter.New()
+
+	router.GET("/version", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		fmt.Fprintln(w, VersionString)
+	})
 	//router.ServeFiles("/assets/*filepath", http.Dir("assets"))
 	router.GET("/", handlers.IndexHandler(plugins, db))
 	router.GET("/assets/*filepath", handlers.AssetsHandler())

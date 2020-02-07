@@ -8,5 +8,7 @@ if [[ ! -d "assets" ]]; then
 fi
 
 go test ./...
-go build --tags "icu json1 fts5 secure_delete" -o bin/meta-view-service
+go build \
+    -ldflags "-X main.VersionString=$(git describe --always --dirty --tags)" \
+    --tags "icu json1 fts5 secure_delete" -o bin/meta-view-service
 
