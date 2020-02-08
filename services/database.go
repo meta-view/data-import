@@ -81,7 +81,12 @@ func (db *Database) insertOrUpdateEntry(data map[string]interface{}) (string, er
 		return "", err
 	}
 
-	sqlStmt := fmt.Sprintf("INSERT INTO %s(id, provider, owner, imported, created, updated, content) VALUES (?, ?, ?, ?, ?, ?, json(?)) ON CONFLICT(id) DO UPDATE SET provider=?, owner=?, imported=?, created=?, updated=?, content=json(?) WHERE id = ?;", data["table"])
+	sqlStmt := fmt.Sprintf(`INSERT INTO %s 
+		(id, provider, owner, imported, created, updated, content) 
+		VALUES 
+		(?, ?, ?, ?, ?, ?, json(?)) 
+		ON CONFLICT(id) DO UPDATE SET provider=?, owner=?, imported=?, created=?, updated=?, content=json(?) 
+		WHERE id = ?;`, data["table"])
 
 	stmt, err := tx.Prepare(sqlStmt)
 	if err != nil {
@@ -117,7 +122,9 @@ func (db *Database) insertOrUpdateEntry(data map[string]interface{}) (string, er
 }
 
 func (db *Database) checkTable(table string) error {
-	stmt, err := db.DB.Prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?")
+	stmt, err := db.DB.Prepare(`SELECT name 
+		FROM sqlite_master 
+		WHERE type='table' AND name=?`)
 	if err != nil {
 		return err
 	}
@@ -126,7 +133,14 @@ func (db *Database) checkTable(table string) error {
 	var sqlStmt string
 	err = stmt.QueryRow(table).Scan(&name)
 	if err != nil && err == sql.ErrNoRows {
-		sqlStmt = fmt.Sprintf("CREATE TABLE %s (id TEXT not null primary key, owner TEXT, provider TEXT, imported TEXT, created TEXT, updated TEXT, content TEXT);", table)
+		sqlStmt = fmt.Sprintf(`CREATE TABLE %s 
+			(id TEXT not null primary key, 
+			owner TEXT, 
+			provider TEXT, 
+			imported TEXT, 
+			created TEXT, 
+			updated TEXT, 
+			content TEXT);`, table)
 		_, err = db.DB.Exec(sqlStmt)
 		if err != nil {
 			return err

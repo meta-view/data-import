@@ -14,20 +14,27 @@ import (
 
 // Plugin - a basic plugin structur
 type Plugin struct {
-	Name            string `json:"name"`
-	Description     string `json:"description"`
-	DownloadRequest string `json:"download_request"`
-	URLWhitelist    []string
-	Version         *semver.Version
-	Path            string
-	VM              *otto.Otto
-	DB              *services.Database
-	FS              *services.FileStorage
+	ID              string                `json:"ID"`
+	Name            string                `json:"name"`
+	Description     string                `json:"description"`
+	DownloadRequest string                `json:"download_request"`
+	URLWhitelist    []string              `json:"url_whitelist"`
+	Provider        string                `json:"provider"`
+	Version         *semver.Version       `json:"version"`
+	Path            string                `json:"path"`
+	VM              *otto.Otto            `json:"-"`
+	DB              *services.Database    `json:"-"`
+	FS              *services.FileStorage `json:"-"`
 }
 
 // LoadPlugin - loads one plugin
 func LoadPlugin(pluginPath string, db *services.Database, fs *services.FileStorage) (*Plugin, error) {
-	data, err := ioutil.ReadFile(path.Join(pluginPath, "info.json"))
+	infoFile := path.Join(pluginPath, "info.json")
+	data, err := ioutil.ReadFile(infoFile)
+	if err != nil {
+		return nil, err
+	}
+	checksum, err := services.GetSha1ChecksumOfFile(infoFile)
 	if err != nil {
 		return nil, err
 	}
@@ -35,12 +42,14 @@ func LoadPlugin(pluginPath string, db *services.Database, fs *services.FileStora
 	err = json.Unmarshal(data, &packageInfo)
 	log.Printf("loading %s from %s\n", packageInfo, pluginPath)
 	return &Plugin{
+		ID:              checksum,
 		Name:            packageInfo["name"].(string),
 		Description:     packageInfo["description"].(string),
 		DownloadRequest: packageInfo["download_request"].(string),
 		URLWhitelist:    parseList(packageInfo["url_whitelist"]),
 		Path:            pluginPath,
 		Version:         semver.New(packageInfo["version"].(string)),
+		Provider:        packageInfo["provider"].(string),
 		VM:              otto.New(),
 		DB:              db,
 		FS:              fs,
@@ -77,6 +86,17 @@ func (plugin *Plugin) Detect(payloadPath string) (float64, error) {
 	if err != nil {
 		return output, err
 	}
+
+	err = plugin.VM.Set("_provider", plugin.Provider)
+	if err != nil {
+		return output, err
+	}
+
+	err = plugin.VM.Set("_version", plugin.Version)
+	if err != nil {
+		return output, err
+	}
+
 	err = plugin.VM.Set("_defaultProfile", defaultProfile)
 	if err != nil {
 		return output, err

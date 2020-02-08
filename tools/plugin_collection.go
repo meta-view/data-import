@@ -2,6 +2,7 @@ package tools
 
 import (
 	"io/ioutil"
+	"log"
 	"meta-view-service/services"
 	"path"
 )
@@ -24,7 +25,29 @@ func LoadPlugins(pluginFolder string, db *services.Database, fs *services.FileSt
 			if err == nil {
 				plugins[folder.Name()] = plugin
 			}
+			id, err := registerPlugin(plugin, db)
+			if err != nil {
+				log.Printf("error: %s", err)
+			}
+			log.Printf("registering plugin ID: %s ", id)
 		}
 	}
 	return plugins, nil
+}
+
+func registerPlugin(plugin *Plugin, db *services.Database) (string, error) {
+	data := make(map[string]interface{})
+	data["id"] = plugin.ID
+	data["owner"] = "system"
+	data["table"] = "providers"
+	data["provider"] = plugin.Provider
+	data["name"] = plugin.Provider
+	data["content-type"] = "application/json"
+
+	data["content"] = plugin
+	result, err := db.SaveEntry(data)
+	if err != nil {
+		return "", err
+	}
+	return result, nil
 }

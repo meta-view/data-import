@@ -1,21 +1,8 @@
 (function(){
-    var provider = "twitter.com";
     var account;
     var owner;
     files = listFiles()
-    console.log("[" + provider + "] Importing payload " + files.length + " files");
-
-    // Set provider
-    data = {
-        "id": getChecksum(provider),
-        "owner": "system",
-        "table": "providers",
-        "provider": provider,
-        "name": provider,
-        "content-type": "plain/text",
-        "content": provider
-    }
-    saveEntry(data);
+    console.log("[" + _provider + "] Importing payload " + files.length + " files");
 
     // Importing files into the database
     for (i in files) {
@@ -54,11 +41,12 @@
 
                 owner = getFileChecksum(file);
                 account["profile"] = profile;
+                account["provider_version"] = _version;
                 data = {
                     "id": getFileChecksum(file),
                     "owner": owner,
                     "table": "accounts",
-                    "provider": provider,
+                    "provider": _provider,
                     "name": file,
                     "content-type": "application/json",
                     "content": account
@@ -79,12 +67,13 @@
                                 checksum = getChecksum(JSON.stringify(message));
                                 message["conversationId"] = conversationId;
                                 message["account"] = account;
+                                message["provider_version"] = _version;
                                 messageData = {
                                     "id": checksum,
                                     "owner": owner,
                                     "created": message.createdAt,
                                     "table": "messages",
-                                    "provider": provider,
+                                    "provider": _provider,
                                     "name": "message-" + message.id,
                                     "content-type": "application/json",
                                     "content": message
@@ -102,11 +91,12 @@
                     like = likes[i];
                     checksum = getChecksum(JSON.stringify(like));
                     like["account"] = account;
+                    like["provider_version"] = _version;
                     likeData = {
                         "id": checksum,
                         "owner": owner,
                         "table": "likes",
-                        "provider": provider,
+                        "provider": _provider,
                         "name": "like-"+like.tweetId,
                         "content-type": "application/json",
                         "content": like
@@ -126,12 +116,13 @@
                     createdDate = stringToDate(tweet.created_at);
                     created = ISODateString(createdDate);
                     tweet["account"] = account;
+                    tweet["provider_version"] = _version;
                     tweetData = {
                         "id": checksum,
                         "owner": owner,
                         "created": created,
                         "table": "posts",
-                        "provider": provider,
+                        "provider": _provider,
                         "name": "tweet-" + tweet.id,
                         "content-type": "application/json",
                         "content": tweet
@@ -141,12 +132,13 @@
                         geo = tweet.geo;
                         geo["tweet_id"] = checksum;
                         geo["tweet_name"] = "tweet-" + tweet.id;
+                        geo["provider_version"] = _version;
                         geoData = {
                             "id": getChecksum(JSON.stringify(hashTag)),
                             "owner": owner,
                             "created": created,
                             "table": "locations",
-                            "provider": provider,
+                            "provider": _provider,
                             "name": "geo-" + tweet.id,
                             "content-type": "application/json",
                             "content": geo
@@ -157,12 +149,13 @@
                         hashTag = tweet.entities.hashtags[ti];
                         hashTag["tweet_id"] = checksum;
                         hashTag["tweet_name"] = "tweet-" + tweet.id;
+                        hashTag["provider_version"] = _version;
                         hashTagData = {
                             "id": getChecksum(JSON.stringify(hashTag)),
                             "owner": owner,
                             "created": created,
                             "table": "tags",
-                            "provider": provider,
+                            "provider": _provider,
                             "name": hashTag.text,
                             "content-type": "application/json",
                             "content": hashTag
@@ -173,12 +166,13 @@
                         mention = tweet.entities.user_mentions[mi];
                         mention["tweet_id"] = checksum;
                         mention["tweet_name"] = "tweet-" + tweet.id;
+                        mention["provider_version"] = _version;
                         mentionData = {
                             "id": getChecksum(JSON.stringify(mention)),
                             "owner": owner,
                             "created": created,
                             "table": "mentions",
-                            "provider": provider,
+                            "provider": _provider,
                             "name": mention.screen_name,
                             "content-type": "application/json",
                             "content": mention
@@ -195,7 +189,7 @@
                         "id": checksum,
                         "owner": owner,
                         "table": "images",
-                        "provider": provider,
+                        "provider": _provider,
                         "file": file,
                         "name": name,
                         "content-type": contentType,
@@ -207,7 +201,7 @@
                         "id": checksum,
                         "owner": owner,
                         "table": "videos",
-                        "provider": provider,
+                        "provider": _provider,
                         "file": file,
                         "name": name,
                         "content-type": contentType,
@@ -218,7 +212,7 @@
                         "id": checksum,
                         "owner": owner,
                         "table": "files",
-                        "provider": provider,
+                        "provider": _provider,
                         "name": file,
                         "content-type": contentType,
                         "filePath": saveFile(file)

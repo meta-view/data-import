@@ -2,5 +2,6 @@
     "name": "default",
     "description": "Fallback, if nothing else is working",
     "version": "0.0.1",
+    "provider": "default",
     "download_request": "/"
 }
