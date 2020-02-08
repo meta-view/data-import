@@ -74,6 +74,9 @@ func LoadTemplates(VersionString string) {
 }
 
 func renderTemplate(w http.ResponseWriter, name string, data map[string]interface{}) {
+	if data == nil {
+		data = make(map[string]interface{})
+	}
 	data["versionString"] = versionString
 	tmpl, ok := templates[name]
 	if !ok {

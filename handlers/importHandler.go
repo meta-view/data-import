@@ -38,6 +38,7 @@ func UploadHandler(plugins map[string]*tools.Plugin) httprouter.Handle {
 func handleUpload(w http.ResponseWriter, r *http.Request, plugins map[string]*tools.Plugin) {
 	r.ParseMultipartForm(512 << 20)
 	data := make(map[string]interface{})
+	results := make(map[string]interface{})
 	fhs := r.MultipartForm.File["files[]"]
 	for _, fh := range fhs {
 		fileData := make(map[string]interface{})
@@ -76,8 +77,9 @@ func handleUpload(w http.ResponseWriter, r *http.Request, plugins map[string]*to
 		}
 
 		fileData["markers"] = markers
-		data[foldername] = fileData
+		results[foldername] = fileData
 	}
+	data["results"] = results
 	renderTemplate(w, "importForm.html", data)
 }
 
