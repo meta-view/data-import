@@ -1,6 +1,7 @@
 package tools
 
 import (
+	"log"
 	"meta-view-service/services"
 	"strings"
 
@@ -8,15 +9,22 @@ import (
 )
 
 // LoadPluginExtenstions - adds JS extensions to otto vm runtime
-func LoadPluginExtenstions(vm *otto.Otto) error {
-	err := vm.Set("getChecksum", func(content string) string {
+func (plugin *Plugin) LoadPluginExtenstions() error {
+	err := plugin.VM.Set("getChecksum", func(content string) string {
 		return services.GetSha1Checksum(content)
 	})
 	if err != nil {
 		return err
 	}
 
-	err = loadStringExtensions(vm)
+	err = plugin.VM.Set("log", func(message string) {
+		log.Printf("[%s] %s", plugin.Name, message)
+	})
+	if err != nil {
+		return err
+	}
+
+	err = loadStringExtensions(plugin.VM)
 	if err != nil {
 		return err
 	}

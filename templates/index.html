@@ -22,8 +22,10 @@
             <!-- static for now ;-) -->
             <option {{ if eq .table "posts" }} selected="selected" {{ end }} value="posts">posts</option>
             <option {{ if eq .table "messages" }} selected="selected" {{ end }} value="messages">messages</option>
-            <option {{ if eq .table "images" }} selected="selected" {{ end }} value="images">images</option>
             <option {{ if eq .table "locations" }} selected="selected" {{ end }} value="locations">locations</option>
+            <option {{ if eq .table "tags" }} selected="selected" {{ end }} value="tags">tags</option>
+            <option {{ if eq .table "images" }} selected="selected" {{ end }} value="images">images</option>
+            <option {{ if eq .table "videos" }} selected="selected" {{ end }} value="videos">videos</option>
           </select>
           <div class="input-icon ml-2">
             <button type="submit" class="btn btn-primary">Show</button>

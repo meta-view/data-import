@@ -72,7 +72,7 @@ func (plugin *Plugin) Detect(payloadPath string) (float64, error) {
 	log.Printf("Detecting if %s is for [%s]\n", payloadPath, plugin.Name)
 	output := 0.0
 
-	err := LoadPluginExtenstions(plugin.VM)
+	err := plugin.LoadPluginExtenstions()
 	if err != nil {
 		return output, err
 	}
@@ -129,7 +129,7 @@ func (plugin *Plugin) Detect(payloadPath string) (float64, error) {
 func (plugin *Plugin) Import(payloadPath string) error {
 	log.Printf("Importing data of %s for [%s]\n", payloadPath, plugin.Name)
 
-	err := LoadPluginExtenstions(plugin.VM)
+	err := plugin.LoadPluginExtenstions()
 	if err != nil {
 		return err
 	}
@@ -168,15 +168,16 @@ func (plugin *Plugin) Present(entry map[string]interface{}, render string) (stri
 	log.Printf("Presenting result id %s for [%s]", entry["id"], plugin.Name)
 	output := ""
 
+	err := plugin.LoadPluginExtenstions()
+	if err != nil {
+		return output, err
+	}
+
 	script, err := ioutil.ReadFile(path.Join(plugin.Path, "presenter.js"))
 	if err != nil {
 		return output, err
 	}
 
-	err = LoadPluginExtenstions(plugin.VM)
-	if err != nil {
-		return output, err
-	}
 	plugin.VM.Set("render", render)
 	plugin.VM.Set("entry", entry)
 	result, err := plugin.VM.Run(script)

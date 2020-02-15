@@ -62,12 +62,19 @@ func (db *Database) SaveEntry(data map[string]interface{}) (string, error) {
 	}
 
 	date := time.Now().Format(time.RFC3339)
-	if data["created"] == nil {
-		data["created"] = date
+	layout := "2006-01-02T15:04:05Z"
+
+	for _, k := range [...]string{"created", "imported"} {
+		if data[k] == nil {
+			data[k] = date
+		}
+		dateString := data[k].(string)
+		t, err := time.Parse(layout, dateString)
+		if err == nil {
+			data[k] = t
+		}
 	}
-	if data["imported"] == nil {
-		data["imported"] = date
-	}
+
 	data["updated"] = date
 
 	return db.insertOrUpdateEntry(data)
@@ -133,14 +140,8 @@ func (db *Database) checkTable(table string) error {
 	var sqlStmt string
 	err = stmt.QueryRow(table).Scan(&name)
 	if err != nil && err == sql.ErrNoRows {
-		sqlStmt = fmt.Sprintf(`CREATE TABLE %s 
-			(id TEXT not null primary key, 
-			owner TEXT, 
-			provider TEXT, 
-			imported TEXT, 
-			created TEXT, 
-			updated TEXT, 
-			content TEXT);`, table)
+		sqlStmt = fmt.Sprintf(`CREATE TABLE %s (id TEXT not null primary key, owner TEXT, provider TEXT, imported TEXT, created TEXT, updated TEXT, content TEXT);`, table)
+		log.Printf("sqlStmt: %s\n", sqlStmt)
 		_, err = db.DB.Exec(sqlStmt)
 		if err != nil {
 			return err
@@ -148,6 +149,8 @@ func (db *Database) checkTable(table string) error {
 		log.Printf("created table %s\n", table)
 
 		sqlStmt = fmt.Sprintf("CREATE UNIQUE INDEX idx_%s_id ON %s(id);", table, table)
+
+		log.Printf("sqlStmt: %s\n", sqlStmt)
 		_, err = db.DB.Exec(sqlStmt)
 		if err != nil {
 			return err
@@ -207,6 +210,8 @@ func (db *Database) CountEntries(query map[string]interface{}) (int, error) {
 			}
 		}
 	}
+
+	log.Printf("query: %s\n", queryStmt)
 	rows, err := db.DB.Query(queryStmt)
 	if err != nil {
 		return out, err
@@ -267,7 +272,6 @@ func (db *Database) queryTable(table string, query map[string]interface{}) (map[
 		return output, err
 	}
 
-	log.Printf("mapping results of %s to elements", query)
 	for rows.Next() {
 		data := make(map[string]interface{})
 		var id, provider, owner, imported, created, updated, content string

@@ -2,7 +2,7 @@
     var account;
     var owner;
     files = listFiles()
-    console.log("[" + _provider + "] Importing payload " + files.length + " files");
+    log("Importing payload " + files.length + " files.");
 
     // Importing files into the database
     for (i in files) {
@@ -60,7 +60,7 @@
                     if(conversations[i].dmConversation) {
                         conversation = conversations[i].dmConversation;
                         conversationId = conversation.conversationId;
-                        console.log("importing conversation " + conversationId);
+                        log("importing conversation " + conversationId);
                         for(mi in conversation.messages) {
                             if(conversation.messages[mi].messageCreate) {
                                 message = conversation.messages[mi].messageCreate;
@@ -227,9 +227,12 @@
             case "tweet.js":
                 content = StringReplace(getContent(file), "window.YTD.tweet.part0 = ", "");
                 tweets = JSON.parse(content);
-                console.log("linking images to tweets.");
+                log("linking mediaFiles to tweets.");
                 for (i in tweets) {
                     tweet = tweets[i];
+                    if (tweet["tweet"] !== undefined) {
+                        tweet = tweet["tweet"];
+                    }
                     if(tweet.entities && tweet.entities.media) {
                         linkMedia(tweet.entities.media, tweet, account);
                     } else if(tweet.extended_entities && tweet.extended_entities.media) {
@@ -245,16 +248,24 @@
         createdDate = stringToDate(tweet.created_at);
         created = ISODateString(createdDate);
         for(mi in media) {
+            query = {};
             mediaFile = tweet.extended_entities.media[mi];
-            filename = mediaFile.media_url.replace("http://pbs.twimg.com/media/", "");
-            query = {"table":"images", "content": {"name": filename}};
-            images = readEntry(query);
-            for (i in images) {
-                image = images[i];
-                var content = JSON.parse(image["content"]);
+            if(mediaFile.video_info && mediaFile.video_info.variants) {
+                variant = mediaFile.video_info.variants[0];
+                filename = splitToLastBy(variant.url,"/");
+                query = {"table":"videos", "content": {"name": filename}};
+            } else {
+                filename = splitToLastBy(mediaFile.media_url,"/");
+                query = {"table":"images", "content": {"name": filename}};
+            }
+            elements = readEntry(query);
+            for (i in elements) {
+                element = elements[i];
+                var content = JSON.parse(element["content"]);
                 content["media"] = mediaFile;
                 content["account"] = account;
                 content["created"] = created;
+                content["post_id"] = checksum;
                 content["favorite_count"] = tweet.favorite_count;
                 content["retweet_count"] = tweet.retweet_count;
                 saveEntry(content);
