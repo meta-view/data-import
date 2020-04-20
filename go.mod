@@ -5,7 +5,6 @@ go 1.12
 require (
 	github.com/coreos/go-semver v0.3.0
 	github.com/google/uuid v1.1.1
-	github.com/jteeuwen/go-bindata v3.0.7+incompatible // indirect
 	github.com/julienschmidt/httprouter v1.2.0
 	github.com/mattn/go-sqlite3 v2.0.2+incompatible
 	github.com/oxtoacart/bpool v0.0.0-20190530202638-03653db5a59c
